@@ -12,6 +12,7 @@ import {
   MDSL,
   type MdslDocument,
   type MdslNode,
+  type MdslKind,
   type ParseOptions,
   type InferMdsl,
 } from "./types.js";
@@ -36,7 +37,7 @@ export function frontmatter<T extends ZodRawShape>(schema: ZodObject<T>): MdslNo
 }
 
 export function section<F extends Record<string, MdslNode>>(
-  heading: string | RegExp,
+  sectionHeading: string | RegExp,
   fields: F,
   depth = 2,
 ): MdslNode<ZodObject<FieldsToShape<F>>> {
@@ -44,7 +45,7 @@ export function section<F extends Record<string, MdslNode>>(
     Object.entries(fields).map(([k, v]) => [k, v.schema]),
   ) as ZodRawShape;
   const schema = z.object(shape) as ZodObject<FieldsToShape<F>>;
-  return { [MDSL]: { kind: "section", heading, depth, fields }, schema };
+  return { [MDSL]: { kind: "section", heading: sectionHeading, depth, fields }, schema };
 }
 
 export function prose(): MdslNode<ZodString> {
@@ -85,18 +86,39 @@ export function compose<S extends ZodType>(
   return { [MDSL]: { kind: "compose", nodes }, schema: nodes[0].schema };
 }
 
+export function heading(depth = 1): MdslNode<ZodString> {
+  return { [MDSL]: { kind: "heading", depth }, schema: z.string() };
+}
+
+export function listItems(): MdslNode<ZodArray<ZodString>> {
+  return list(z.string());
+}
+
+export type RepeatOptions = {
+  /** When set, the repeat heading text is stored on each item under this field name */
+  nameField?: string;
+};
+
 /** Extract a repeated heading as an array of objects */
 export function repeat<F extends Record<string, MdslNode>>(
-  heading: string | RegExp,
+  sectionHeading: string | RegExp,
   fields: F,
   depth = 2,
-): MdslNode<ZodArray<ZodObject<FieldsToShape<F>>>> {
-  const shape = Object.fromEntries(
+  options?: RepeatOptions,
+): MdslNode<ZodArray<ZodObject<ZodRawShape>>> {
+  const nameField = options?.nameField;
+  const shape: Record<string, ZodType> = Object.fromEntries(
     Object.entries(fields).map(([k, v]) => [k, v.schema]),
-  ) as ZodRawShape;
+  );
+  if (nameField) {
+    shape[nameField] = z.string();
+  }
   const itemSchema = z.object(shape) as ZodObject<FieldsToShape<F>>;
+  const kind: MdslKind = nameField
+    ? { kind: "repeat", heading: sectionHeading, depth, fields, nameField }
+    : { kind: "repeat", heading: sectionHeading, depth, fields };
   return {
-    [MDSL]: { kind: "repeat", heading, depth, fields },
+    [MDSL]: kind,
     schema: z.array(itemSchema),
   };
 }

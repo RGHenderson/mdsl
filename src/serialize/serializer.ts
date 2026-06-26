@@ -10,6 +10,11 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
       return `---\n${yaml}\n---`;
     }
 
+    case "heading": {
+      const hashes = "#".repeat(meta.depth);
+      return `${hashes} ${String(value ?? "")}`;
+    }
+
     case "section": {
       const heading =
         typeof meta.heading === "string"
@@ -65,15 +70,20 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
     case "repeat": {
       const items = Array.isArray(value) ? value : [];
       const hashes = "#".repeat(meta.depth);
-      const label =
+      const defaultLabel =
         typeof meta.heading === "string"
           ? meta.heading
           : String(meta.heading).replace(/^\/|\/[gimsuy]*$/g, "");
       return items
         .map((item) => {
           if (item == null || typeof item !== "object") return "";
-          const obj = item as Record<string, unknown>;
-          const parts: string[] = [`${hashes} ${label}`];
+          const obj = { ...(item as Record<string, unknown>) };
+          const headingLabel =
+            meta.nameField && typeof obj[meta.nameField] === "string"
+              ? String(obj[meta.nameField])
+              : defaultLabel;
+          if (meta.nameField) delete obj[meta.nameField];
+          const parts: string[] = [`${hashes} ${headingLabel}`];
           for (const [key, fieldNode] of Object.entries(meta.fields)) {
             const fieldStr = serializeNode(obj[key], fieldNode, depth + 1);
             if (fieldStr) parts.push(fieldStr);

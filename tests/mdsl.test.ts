@@ -73,28 +73,29 @@ describe("parse", () => {
   it("parses a valid document with no diagnostics", () => {
     const result = RecipeDoc.parse(SAMPLE_MARKDOWN);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.meta.title).toBe("Pasta");
-    expect(result.data.meta.servings).toBe(4);
+    expect(result.data).not.toBeNull();
+    expect(result.data!.meta.title).toBe("Pasta");
+    expect(result.data!.meta.servings).toBe(4);
   });
 
   it("parses section prose", () => {
     const result = RecipeDoc.parse(SAMPLE_MARKDOWN);
-    expect(result.data.overview.body).toContain("A simple pasta dish");
+    expect(result.data!.overview.body).toContain("A simple pasta dish");
   });
 
   it("parses code block", () => {
     const result = RecipeDoc.parse(SAMPLE_MARKDOWN);
-    expect(result.data.overview.snippet).toBe("cook pasta");
+    expect(result.data!.overview.snippet).toBe("cook pasta");
   });
 
   it("parses list items", () => {
     const result = RecipeDoc.parse(SAMPLE_MARKDOWN);
-    expect(result.data.ingredients.items).toEqual(["Pasta", "Tomato sauce", "Basil"]);
+    expect(result.data!.ingredients.items).toEqual(["Pasta", "Tomato sauce", "Basil"]);
   });
 
   it("parses table rows", () => {
     const result = RecipeDoc.parse(SAMPLE_MARKDOWN);
-    expect(result.data.nutrition.rows).toEqual([
+    expect(result.data!.nutrition.rows).toEqual([
       { nutrient: "Calories", amount: "400kcal" },
       { nutrient: "Protein", amount: "12g" },
     ]);
@@ -121,12 +122,20 @@ describe("parse", () => {
       expect(diag.mdLocation).toHaveProperty("column");
     }
   });
+
+  it("returns null data when parse has errors", () => {
+    const md = `---\ntitle: "X"\nservings: 1\n---\n`;
+    const result = RecipeDoc.parse(md);
+    expect(result.data).toBeNull();
+    expect(result.diagnostics.length).toBeGreaterThan(0);
+  });
 });
 
 describe("serialize", () => {
   it("serializes a model back to markdown", () => {
     const result = RecipeDoc.parse(SAMPLE_MARKDOWN);
-    const out = RecipeDoc.serialize(result.data);
+    expect(result.data).not.toBeNull();
+    const out = RecipeDoc.serialize(result.data!);
     expect(out).toContain("---");
     expect(out).toContain("title:");
     expect(out).toContain("## Overview");
@@ -138,12 +147,14 @@ describe("serialize", () => {
 describe("round-trip", () => {
   it("parse → serialize → parse produces same data", () => {
     const first = RecipeDoc.parse(SAMPLE_MARKDOWN);
-    const serialized = RecipeDoc.serialize(first.data);
+    expect(first.data).not.toBeNull();
+    const serialized = RecipeDoc.serialize(first.data!);
     const second = RecipeDoc.parse(serialized);
-    expect(second.data.meta.title).toBe(first.data.meta.title);
-    expect(second.data.meta.servings).toBe(first.data.meta.servings);
-    expect(second.data.ingredients.items).toEqual(first.data.ingredients.items);
-    expect(second.data.nutrition.rows).toEqual(first.data.nutrition.rows);
+    expect(second.data).not.toBeNull();
+    expect(second.data!.meta.title).toBe(first.data!.meta.title);
+    expect(second.data!.meta.servings).toBe(first.data!.meta.servings);
+    expect(second.data!.ingredients.items).toEqual(first.data!.ingredients.items);
+    expect(second.data!.nutrition.rows).toEqual(first.data!.nutrition.rows);
   });
 });
 
@@ -323,14 +334,14 @@ describe("optional()", () => {
     const md = `---\ntitle: "X"\n---\n`;
     const result = DocWithOptional.parse(md);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.notes).toBeUndefined();
+    expect(result.data!.notes).toBeUndefined();
   });
 
   it("extracts when optional section is present", () => {
     const md = `---\ntitle: "X"\n---\n\n## Notes\n\nSome notes here.\n`;
     const result = DocWithOptional.parse(md);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.notes?.body).toContain("Some notes here");
+    expect(result.data!.notes?.body).toContain("Some notes here");
   });
 });
 
@@ -344,13 +355,13 @@ describe("defaultValue()", () => {
     const md = `---\ntitle: "X"\n---\n`;
     const result = DocWithDefault.parse(md);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.notes).toEqual({ body: "No notes provided." });
+    expect(result.data!.notes).toEqual({ body: "No notes provided." });
   });
 
   it("returns real value when section is present", () => {
     const md = `---\ntitle: "X"\n---\n\n## Notes\n\nActual notes.\n`;
     const result = DocWithDefault.parse(md);
-    expect(result.data.notes.body).toContain("Actual notes");
+    expect(result.data!.notes.body).toContain("Actual notes");
   });
 });
 
@@ -364,14 +375,14 @@ describe("compose()", () => {
     const md = `---\ntitle: "X"\n---\n\n\`\`\`typescript\nconst x = 1;\n\`\`\`\n`;
     const result = DocWithCompose.parse(md);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.snippet).toContain("const x");
+    expect(result.data!.snippet).toContain("const x");
   });
 
   it("falls back to second extractor when first fails", () => {
     const md = `---\ntitle: "X"\n---\n\n\`\`\`python\nprint("hi")\n\`\`\`\n`;
     const result = DocWithCompose.parse(md);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.snippet).toContain("print");
+    expect(result.data!.snippet).toContain("print");
   });
 
   it("emits COMPOSE_FAILED when no extractor matches", () => {
@@ -412,22 +423,23 @@ Build dashboard.
   it("collects multiple same-heading sections as array", () => {
     const result = SprintDoc.parse(md);
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.data.sprints).toHaveLength(2);
+    expect(result.data!.sprints).toHaveLength(2);
   });
 
   it("extracts fields from each occurrence", () => {
     const result = SprintDoc.parse(md);
-    expect(result.data.sprints[0]!.goal).toContain("login");
-    expect(result.data.sprints[1]!.goal).toContain("dashboard");
-    expect(result.data.sprints[0]!.tasks).toContain("Implement auth");
+    expect(result.data!.sprints[0]!.goal).toContain("login");
+    expect(result.data!.sprints[1]!.goal).toContain("dashboard");
+    expect(result.data!.sprints[0]!.tasks).toContain("Implement auth");
   });
 
   it("round-trips through serialize", () => {
     const { data } = SprintDoc.parse(md);
-    const serialized = SprintDoc.serialize(data);
+    expect(data).not.toBeNull();
+    const serialized = SprintDoc.serialize(data!);
     const reparsed = SprintDoc.parse(serialized);
-    expect(reparsed.data.sprints).toHaveLength(2);
-    expect(reparsed.data.sprints[0]!.tasks).toEqual(data.sprints[0]!.tasks);
+    expect(reparsed.data!.sprints).toHaveLength(2);
+    expect(reparsed.data!.sprints[0]!.tasks).toEqual(data!.sprints[0]!.tasks);
   });
 });
 
@@ -480,6 +492,8 @@ describe("toLlmGuide", () => {
     expect(guide).toHaveProperty("template");
     expect(guide).toHaveProperty("guidance");
     expect(guide).toHaveProperty("systemPrompt");
+    expect(guide).toHaveProperty("mappingHints");
+    expect(guide).toHaveProperty("instructions");
   });
 
   it("systemPrompt is a non-empty string", () => {

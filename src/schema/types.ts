@@ -7,6 +7,7 @@ export const MDSL = Symbol("mdsl");
 export type MdslKind =
   | { kind: "document"; fields: Record<string, MdslNode> }
   | { kind: "frontmatter"; schema: ZodType }
+  | { kind: "heading"; depth: number }
   | { kind: "section"; heading: string | RegExp; depth: number; fields: Record<string, MdslNode> }
   | { kind: "prose" }
   | { kind: "codeBlock"; lang: string | undefined }
@@ -15,7 +16,13 @@ export type MdslKind =
   | { kind: "optional"; inner: MdslNode }
   | { kind: "defaultValue"; inner: MdslNode; fallback: unknown }
   | { kind: "compose"; nodes: MdslNode[] }
-  | { kind: "repeat"; heading: string | RegExp; depth: number; fields: Record<string, MdslNode> };
+  | {
+      kind: "repeat";
+      heading: string | RegExp;
+      depth: number;
+      fields: Record<string, MdslNode>;
+      nameField?: string;
+    };
 
 export interface MdslNode<S extends ZodType = ZodType> {
   [MDSL]: MdslKind;
@@ -34,6 +41,8 @@ export interface LlmGuide {
   template: string;
   guidance: string;
   systemPrompt: string;
+  mappingHints: Record<string, string>;
+  instructions: string;
 }
 
 export interface MdslDocument<T> extends MdslNode<ZodType<T>> {
@@ -50,7 +59,7 @@ export interface MdslDocument<T> extends MdslNode<ZodType<T>> {
 }
 
 export interface ParseResult<T> {
-  data: T;
+  data: T | null;
   diagnostics: Diagnostic[];
   raw: Root;
 }
@@ -61,6 +70,11 @@ export interface Diagnostic {
   code: DiagnosticCode;
   mdLocation: Point;
   jsonPath: string;
+  source?: "markdown" | "json";
+  mapping?: string;
+  hint?: string;
+  expected?: string;
+  received?: string;
 }
 
 export const DiagnosticCodes = {

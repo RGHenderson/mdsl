@@ -39,30 +39,65 @@ function makeSectionRoot(children: Node[]): Root {
   return { type: "root", children: children as Root["children"] };
 }
 
+function diag(partial: Omit<Diagnostic, "source">): Diagnostic {
+  return { ...partial, source: "markdown" };
+}
+
+export function extractHeading(
+  ast: Root,
+  depth: number,
+  jsonPath: string,
+  diags: Diagnostic[],
+): string | undefined {
+  for (const node of ast.children) {
+    if (node.type === "heading" && (node as Heading).depth === depth) {
+      return mdastToString(node).trim();
+    }
+  }
+  diags.push(
+    diag({
+      severity: "error",
+      message: `Missing required heading at depth ${depth}`,
+      code: DiagnosticCodes.MISSING_HEADING,
+      mdLocation: UNKNOWN_POINT,
+      jsonPath,
+      mapping: `heading(${depth})`,
+      hint: `Add a ${"#".repeat(depth)} heading to the document.`,
+    }),
+  );
+  return undefined;
+}
+
 export function extractFrontmatter(ast: Root, jsonPath: string, diags: Diagnostic[]): unknown {
   for (const node of ast.children) {
     if (node.type === "yaml") {
       try {
         return parseYaml(node.value);
       } catch (error) {
-        diags.push({
-          severity: "error",
-          message: `Failed to parse YAML frontmatter: ${String(error)}`,
-          code: DiagnosticCodes.FRONTMATTER_PARSE_ERROR,
-          mdLocation: node.position?.start ?? UNKNOWN_POINT,
-          jsonPath,
-        });
+        diags.push(
+          diag({
+            severity: "error",
+            message: `Failed to parse YAML frontmatter: ${String(error)}`,
+            code: DiagnosticCodes.FRONTMATTER_PARSE_ERROR,
+            mdLocation: node.position?.start ?? UNKNOWN_POINT,
+            jsonPath,
+            mapping: "frontmatter(...)",
+          }),
+        );
         return undefined;
       }
     }
   }
-  diags.push({
-    severity: "error",
-    message: "Missing required frontmatter block",
-    code: DiagnosticCodes.MISSING_FRONTMATTER,
-    mdLocation: UNKNOWN_POINT,
-    jsonPath,
-  });
+  diags.push(
+    diag({
+      severity: "error",
+      message: "Missing required frontmatter block",
+      code: DiagnosticCodes.MISSING_FRONTMATTER,
+      mdLocation: UNKNOWN_POINT,
+      jsonPath,
+      mapping: "frontmatter(...)",
+    }),
+  );
   return undefined;
 }
 
@@ -130,13 +165,14 @@ export function extractRepeatSections(
   ast: Root,
   heading: string | RegExp,
   depth: number,
-): Array<{ children: Node[]; position: Point }> {
+): Array<{ children: Node[]; position: Point; title: string }> {
   const indices = findSectionIndices(ast, heading, depth);
   return indices.map((idx) => {
     const node = ast.children[idx]!;
     return {
       children: collectSectionChildren(ast, idx, depth),
       position: (node as Node & { position?: { start: Point } }).position?.start ?? UNKNOWN_POINT,
+      title: mdastToString(node).trim(),
     };
   });
 }
@@ -290,6 +326,9 @@ export function extractNode(
     case "frontmatter":
       return extractFrontmatter(ast, jsonPath, diags);
 
+    case "heading":
+      return extractHeading(ast, meta.depth, jsonPath, diags);
+
     case "section": {
       const sectionResult = extractSection(ast, meta.heading, meta.depth, jsonPath, diags);
       if (!sectionResult) return undefined;
@@ -311,7 +350,11 @@ export function extractNode(
       }
       return occurrences.map((occ, i) => {
         const sectionAst = makeSectionRoot(occ.children);
-        return extractFields(sectionAst, meta.fields, `${jsonPath}[${i}]`, diags);
+        const item = extractFields(sectionAst, meta.fields, `${jsonPath}[${i}]`, diags);
+        if (meta.nameField) {
+          (item as Record<string, unknown>)[meta.nameField] = occ.title;
+        }
+        return item;
       });
     }
 

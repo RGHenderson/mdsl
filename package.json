@@ -1,53 +1,70 @@
 {
   "name": "@rghenderson/mdsl",
   "version": "0.1.1",
-  "description": "Markdown Structured Language — define typed schemas for markdown documents",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RGHenderson/mdsl.git"
-  },
+  "description": "Markdown Structured Language — schema-driven bidirectional markdown ↔ JSON",
+  "keywords": [
+    "dsl",
+    "markdown",
+    "mdast",
+    "parser",
+    "remark",
+    "schema",
+    "serializer",
+    "unified",
+    "zod",
+    "llm",
+    "structured"
+  ],
   "homepage": "https://github.com/RGHenderson/mdsl#readme",
   "bugs": {
     "url": "https://github.com/RGHenderson/mdsl/issues"
   },
-  "keywords": [
-    "markdown",
-    "schema",
-    "zod",
-    "parser",
-    "serializer",
-    "llm",
-    "structured"
+  "license": "MIT",
+  "author": "Robbie Henderson <robbie.gavin.henderson@gmail.com> (https://github.com/RGHenderson)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RGHenderson/mdsl.git"
+  },
+  "bin": {
+    "mdsl": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
   ],
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
+    "prepublishOnly": "npm run check",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --config .oxlintrc.json --tsconfig tsconfig.json src/ tests/",
-    "format": "oxfmt src/ tests/",
-    "format:check": "oxfmt --check src/ tests/",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run build",
+    "format": "oxfmt src/ tests/ examples/",
+    "format:check": "oxfmt --check src/ tests/ examples/",
     "prepare": "husky",
     "release": "commit-and-tag-version",
-    "release:first": "commit-and-tag-version --first-release",
-    "release:dry": "commit-and-tag-version --dry-run"
+    "release:dry": "commit-and-tag-version --dry-run",
+    "mdsl": "node dist/cli.js"
   },
   "dependencies": {
     "mdast-util-gfm": "^3.0.0",
@@ -56,27 +73,32 @@
     "remark": "^15.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.0",
-    "yaml": "^2.0.0",
-    "zod": "^4.0.0"
+    "yaml": "^2.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.5.3",
-    "@commitlint/config-conventional": "^20.5.3",
-    "@types/node": "^22.0.0",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.15.21",
     "commit-and-tag-version": "^12.7.3",
     "husky": "^9.1.7",
     "oxfmt": "^0.56.0",
-    "oxlint": "^1.16.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "oxlint": "^1.69.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "unified": "^11.0.5",
+    "vitest": "^3.2.1",
+    "zod": "^4.0.0"
   },
-  "optionalDependencies": {
-    "@oxfmt/binding-darwin-arm64": "^0.56.0",
-    "@oxfmt/binding-darwin-x64": "^0.56.0",
-    "@oxfmt/binding-linux-x64-gnu": "^0.56.0",
-    "@oxfmt/binding-linux-arm64-gnu": "^0.56.0",
-    "@oxfmt/binding-win32-x64-msvc": "^0.56.0"
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": false
+    }
   },
   "engines": {
     "node": ">=18"

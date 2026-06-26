@@ -19,7 +19,7 @@ import {
   type MdslKind,
   type LlmGuide,
 } from "../schema/types.js";
-import { buildJsonSchema, buildLlmJsonSchema } from "./json-schema.js";
+import { buildJsonSchema, buildLlmJsonSchema, collectMappingHints } from "./json-schema.js";
 
 // ── generateExampleData ───────────────────────────────────────────────────────
 
@@ -74,6 +74,9 @@ function describeNode(key: string, node: MdslNode, depth: number): string {
         .join("\n");
       return `${pad}- **Frontmatter** (YAML at top of document):\n${fields}`;
     }
+
+    case "heading":
+      return `${pad}- **${key}**: Heading at depth ${meta.depth} (#{${meta.depth}}).`;
 
     case "section": {
       const label = typeof meta.heading === "string" ? meta.heading : meta.heading.toString();
@@ -137,6 +140,9 @@ function exampleNode(node: MdslNode): string {
         .join("\n");
       return `---\n${entries}\n---`;
     }
+
+    case "heading":
+      return `# ${generateExampleData(z.string())}`;
 
     case "section": {
       const hashes = "#".repeat(meta.depth);
@@ -345,5 +351,7 @@ export function buildLlmGuide(doc: MdslDocument<unknown>): LlmGuide {
     template,
     guidance,
     systemPrompt,
+    mappingHints: collectMappingHints(doc[MDSL].fields, ""),
+    instructions: systemPrompt,
   };
 }

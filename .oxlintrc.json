@@ -12,7 +12,8 @@
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
       }
-    ]
+    ],
+    "no-underscore-dangle": ["error", { "allow": ["_def"] }]
   },
   "ignorePatterns": ["dist/", "node_modules/"]
 }

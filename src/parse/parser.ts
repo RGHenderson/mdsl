@@ -56,8 +56,10 @@ export function parseAst<T>(
     throw new MdslError(`MDSL parse failed with ${errors.length} error(s)`, diags);
   }
 
+  const valid = errors.length === 0 && zodResult.success;
+
   return {
-    data: (zodResult.success ? zodResult.data : raw) as T,
+    data: valid ? zodResult.data : null,
     diagnostics: diags,
     raw: ast,
   };
@@ -92,8 +94,10 @@ export function validateData<T>(data: unknown, doc: MdslDocument<T>): ParseResul
   // Use an empty root as a stub — validate() has no markdown source
   const stubAst: Root = { type: "root", children: [] };
 
+  const valid = diags.filter((d) => d.severity === "error").length === 0 && zodResult.success;
+
   return {
-    data: (zodResult.success ? zodResult.data : data) as T,
+    data: valid ? zodResult.data : null,
     diagnostics: diags,
     raw: stubAst,
   };
