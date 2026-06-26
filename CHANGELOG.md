@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2](https://github.com/RGHenderson/mdsl/compare/v0.1.1...v0.1.2) (2026-06-26)
+
+
+### Added
+
+* add cli, more docs, remark plugin ([79c90b9](https://github.com/RGHenderson/mdsl/commit/79c90b996af9d9ed0ceaa4892afe7a73026a3469))
+
 ## [0.1.1](https://github.com/RGHenderson/mdsl/compare/v0.1.0...v0.1.1) (2026-06-26)
 
 
