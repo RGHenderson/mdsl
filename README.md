@@ -48,7 +48,7 @@ Root builder. Returns an `MdslDocument<T>` with parse/serialize/LLM methods.
 
 ```ts
 const Doc = document({ field: <node> });
-type DocModel = mdsl.infer<typeof Doc>;
+type DocModel = InferDocument<typeof Doc>;
 ```
 
 ### `frontmatter(zodSchema)`
