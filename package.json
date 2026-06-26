@@ -1,5 +1,5 @@
 {
-  "name": "mdsl",
+  "name": "@rghenderson/mdsl",
   "version": "0.1.0",
   "description": "Markdown Structured Language — define typed schemas for markdown documents",
   "license": "MIT",

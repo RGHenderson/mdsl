@@ -4,7 +4,7 @@
 
 ```ts
 import { z } from "zod";
-import { document, frontmatter, section, prose, list } from "mdsl";
+import { document, frontmatter, section, prose, list } from "@rghenderson/mdsl";
 
 const RecipeDoc = document({
   meta: frontmatter(z.object({
@@ -25,7 +25,7 @@ const result = RecipeDoc.parse(markdownString);
 ## Install
 
 ```sh
-npm install mdsl zod
+npm install @rghenderson/mdsl zod
 ```
 
 ## Overview
