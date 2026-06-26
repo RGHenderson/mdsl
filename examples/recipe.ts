@@ -101,13 +101,13 @@ console.log('\n' + '='.repeat(60));
 console.log('2. SERIALISE → RE-PARSE ROUND-TRIP');
 console.log('='.repeat(60));
 
-const serialized = RecipeDoc.serialize(result.data);
+const serialized = RecipeDoc.serialize(result.data!);
 console.log('\nSerialized markdown:\n');
 console.log(serialized);
 
 const reparsed = RecipeDoc.parse(serialized);
 console.log('Round-trip diagnostics:', reparsed.diagnostics.length === 0 ? '✓ None' : formatDiagnostics(reparsed.diagnostics));
-console.log('Title matches:', reparsed.data.meta.title === result.data.meta.title ? '✓' : '✗');
+console.log('Title matches:', reparsed.data!.meta.title === result.data!.meta.title ? '✓' : '✗');
 
 console.log('\n' + '='.repeat(60));
 console.log('3. JSON SCHEMA (for LLM structured output)');
