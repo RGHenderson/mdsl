@@ -1,6 +1,6 @@
 {
   "name": "@rghenderson/mdsl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Markdown Structured Language — define typed schemas for markdown documents",
   "license": "MIT",
   "repository": {
@@ -11,7 +11,15 @@
   "bugs": {
     "url": "https://github.com/RGHenderson/mdsl/issues"
   },
-  "keywords": ["markdown", "schema", "zod", "parser", "serializer", "llm", "structured"],
+  "keywords": [
+    "markdown",
+    "schema",
+    "zod",
+    "parser",
+    "serializer",
+    "llm",
+    "structured"
+  ],
   "type": "module",
   "exports": {
     ".": {
