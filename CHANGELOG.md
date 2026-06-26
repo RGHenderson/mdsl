@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3](https://github.com/RGHenderson/mdsl/compare/v0.1.2...v0.1.3) (2026-06-26)
+
+
+### CI
+
+* only node 22 for CI ([8191bd1](https://github.com/RGHenderson/mdsl/commit/8191bd176f624b0ae2d5516b86ec92f17f8556a6))
+
 ## [0.1.2](https://github.com/RGHenderson/mdsl/compare/v0.1.1...v0.1.2) (2026-06-26)
 
 
