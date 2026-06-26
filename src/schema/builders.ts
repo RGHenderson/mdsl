@@ -15,6 +15,7 @@ import {
   type MdslKind,
   type ParseOptions,
   type InferMdsl,
+  type ValidatorFn,
 } from "./types.js";
 import { parseMarkdown, validateData } from "../parse/parser.js";
 import { serializeDocument } from "../serialize/serializer.js";
@@ -127,6 +128,9 @@ export function repeat<F extends Record<string, MdslNode>>(
 
 export function document<Fields extends Record<string, MdslNode>>(
   fields: Fields,
+  _validators: ValidatorFn<{
+    [K in keyof Fields]: Fields[K] extends MdslNode<infer S> ? z.infer<S> : never;
+  }>[] = [],
 ): MdslDocument<{ [K in keyof Fields]: Fields[K] extends MdslNode<infer S> ? z.infer<S> : never }> {
   type Model = { [K in keyof Fields]: Fields[K] extends MdslNode<infer S> ? z.infer<S> : never };
 
@@ -138,6 +142,7 @@ export function document<Fields extends Record<string, MdslNode>>(
   const doc: MdslDocument<Model> = {
     [MDSL]: { kind: "document", fields },
     schema,
+    validators: _validators,
 
     parse(markdown: string, options?: ParseOptions) {
       return parseMarkdown(markdown, doc, options);
@@ -173,6 +178,10 @@ export function document<Fields extends Record<string, MdslNode>>(
 
     toExampleMarkdown() {
       return buildExampleMarkdown(doc);
+    },
+
+    refine(fn: ValidatorFn<Model>) {
+      return document(fields, [..._validators, fn]);
     },
   };
 

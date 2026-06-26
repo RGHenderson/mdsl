@@ -502,3 +502,128 @@ describe("toLlmGuide", () => {
     expect(systemPrompt.length).toBeGreaterThan(100);
   });
 });
+
+// ── .refine() validation API ──────────────────────────────────────────────────
+
+describe("document.refine()", () => {
+  const ValidatedDoc = document({
+    meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+    overview: section("Overview", { body: prose() }),
+    ingredients: section("Ingredients", { items: list(z.string()) }),
+  }).refine((data, { error, warning }) => {
+    if (data.ingredients.items.length === 0) {
+      error("ingredients.items", "Recipe must have at least one ingredient");
+    }
+    if (data.meta.servings > 100) {
+      warning("meta.servings", "Unusually high serving count");
+    }
+  });
+
+  const validMd = `---
+title: "Soup"
+servings: 4
+---
+
+## Overview
+
+A simple soup.
+
+## Ingredients
+
+- Salt
+- Water
+`;
+
+  it("passes when validator raises no issues", () => {
+    const result = ValidatedDoc.parse(validMd);
+    expect(result.data).not.toBeNull();
+    expect(result.diagnostics).toHaveLength(0);
+  });
+
+  it("reports error from validator and still returns data", () => {
+    const withError = document({
+      meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+      overview: section("Overview", { body: prose() }),
+      ingredients: section("Ingredients", { items: list(z.string()) }),
+    }).refine((data, { error }) => {
+      if (data.ingredients.items.length > 0) {
+        error("ingredients.items", "Forced error for test");
+      }
+    });
+    const result = withError.parse(validMd);
+    // Validator errors do not null data — the model is structurally valid
+    expect(result.data).not.toBeNull();
+    const diag = result.diagnostics.find((d) => d.jsonPath === "ingredients.items");
+    expect(diag).toBeDefined();
+    expect(diag!.severity).toBe("error");
+    expect(diag!.message).toBe("Forced error for test");
+    expect(diag!.code).toBe(DiagnosticCodes.VALIDATION_ERROR);
+  });
+
+  it("reports warning from validator without nulling data", () => {
+    const withWarning = document({
+      meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+      overview: section("Overview", { body: prose() }),
+      ingredients: section("Ingredients", { items: list(z.string()) }),
+    }).refine((data, { warning }) => {
+      warning("meta.servings", "Test warning");
+    });
+    const result = withWarning.parse(validMd);
+    expect(result.data).not.toBeNull();
+    const diag = result.diagnostics.find((d) => d.jsonPath === "meta.servings");
+    expect(diag).toBeDefined();
+    expect(diag!.severity).toBe("warning");
+  });
+
+  it("does not run validators when structural parse fails", () => {
+    const calls: string[] = [];
+    const doc = document({
+      meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+      overview: section("Overview", { body: prose() }),
+      ingredients: section("Ingredients", { items: list(z.string()) }),
+    }).refine((_data, { error }) => {
+      calls.push("ran");
+      error("meta", "should not be called");
+    });
+    // Missing required sections
+    const result = doc.parse(`---\ntitle: "X"\nservings: 2\n---\n`);
+    expect(result.data).toBeNull();
+    expect(calls).toHaveLength(0);
+  });
+
+  it("chains multiple refine calls", () => {
+    const doc = document({
+      meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+      overview: section("Overview", { body: prose() }),
+      ingredients: section("Ingredients", { items: list(z.string()) }),
+    })
+      .refine((_data, { warning }) => {
+        warning("meta.title", "first");
+      })
+      .refine((_data, { warning }) => {
+        warning("meta.servings", "second");
+      });
+    const result = doc.parse(validMd);
+    expect(result.diagnostics).toHaveLength(2);
+    expect(result.diagnostics[0]!.message).toBe("first");
+    expect(result.diagnostics[1]!.message).toBe("second");
+  });
+
+  it("also runs validators in validate()", () => {
+    const doc = document({
+      meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+      overview: section("Overview", { body: prose() }),
+      ingredients: section("Ingredients", { items: list(z.string()) }),
+    }).refine((_data, { error }) => {
+      error("meta.title", "validator ran");
+    });
+    const data = {
+      meta: { title: "X", servings: 1 },
+      overview: { body: "ok" },
+      ingredients: { items: ["x"] },
+    };
+    const result = doc.validate(data);
+    const diag = result.diagnostics.find((d) => d.message === "validator ran");
+    expect(diag).toBeDefined();
+  });
+});

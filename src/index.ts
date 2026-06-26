@@ -33,6 +33,8 @@ export type {
   MdslPosition,
   InferDocument,
   InferMdsl,
+  ValidationContext,
+  ValidatorFn,
 } from "./schema/types.js";
 
 export type { Registry, MatchContext, MatchFn } from "./schema/registry.js";

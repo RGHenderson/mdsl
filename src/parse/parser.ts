@@ -10,6 +10,7 @@ import {
   type ParseResult,
   type Diagnostic,
   type ParseOptions,
+  type ValidationContext,
 } from "../schema/types.js";
 import { extractFields } from "./mappers.js";
 
@@ -51,18 +52,55 @@ export function parseAst<T>(
     }
   }
 
+  const structuralErrors = diags.filter((d) => d.severity === "error");
+  const structurallyValid = structuralErrors.length === 0 && zodResult.success;
+
+  if (structurallyValid && doc.validators.length > 0) {
+    runValidators(zodResult.data, doc.validators, diags);
+  }
+
   const errors = diags.filter((d) => d.severity === "error");
   if (options.strict && errors.length > 0) {
     throw new MdslError(`MDSL parse failed with ${errors.length} error(s)`, diags);
   }
 
-  const valid = errors.length === 0 && zodResult.success;
-
   return {
-    data: valid ? zodResult.data : null,
+    data: structurallyValid ? zodResult.data : null,
     diagnostics: diags,
     raw: ast,
   };
+}
+
+function runValidators<T>(
+  data: T,
+  validators: MdslDocument<T>["validators"],
+  diags: Diagnostic[],
+): void {
+  const ctx: ValidationContext = {
+    error(path, message) {
+      diags.push({
+        severity: "error",
+        message,
+        code: DiagnosticCodes.VALIDATION_ERROR,
+        mdLocation: { line: 1, column: 0, offset: 0 },
+        jsonPath: path,
+        source: "json",
+      });
+    },
+    warning(path, message) {
+      diags.push({
+        severity: "warning",
+        message,
+        code: DiagnosticCodes.VALIDATION_ERROR,
+        mdLocation: { line: 1, column: 0, offset: 0 },
+        jsonPath: path,
+        source: "json",
+      });
+    },
+  };
+  for (const fn of validators) {
+    fn(data, ctx);
+  }
 }
 
 export function parseMarkdown<T>(
@@ -91,13 +129,18 @@ export function validateData<T>(data: unknown, doc: MdslDocument<T>): ParseResul
     }
   }
 
+  const structurallyValid =
+    diags.filter((d) => d.severity === "error").length === 0 && zodResult.success;
+
+  if (structurallyValid && doc.validators.length > 0) {
+    runValidators(zodResult.data, doc.validators, diags);
+  }
+
   // Use an empty root as a stub — validate() has no markdown source
   const stubAst: Root = { type: "root", children: [] };
 
-  const valid = diags.filter((d) => d.severity === "error").length === 0 && zodResult.success;
-
   return {
-    data: valid ? zodResult.data : null,
+    data: structurallyValid ? zodResult.data : null,
     diagnostics: diags,
     raw: stubAst,
   };

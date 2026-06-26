@@ -33,6 +33,13 @@ export interface ParseOptions {
   strict?: boolean;
 }
 
+export interface ValidationContext {
+  error(path: string, message: string): void;
+  warning(path: string, message: string): void;
+}
+
+export type ValidatorFn<T> = (data: T, ctx: ValidationContext) => void;
+
 export interface LlmGuide {
   jsonSchema: object;
   llmJsonSchema: object;
@@ -47,6 +54,8 @@ export interface LlmGuide {
 
 export interface MdslDocument<T> extends MdslNode<ZodType<T>> {
   [MDSL]: { kind: "document"; fields: Record<string, MdslNode> };
+  // biome-ignore lint/suspicious/noExplicitAny: validators are registered with the concrete type but stored loosely to preserve MdslDocument assignability
+  validators: ValidatorFn<any>[];
   parse(markdown: string, options?: ParseOptions): ParseResult<T>;
   validate(data: unknown): ParseResult<T>;
   serialize(data: T): string;
@@ -56,6 +65,7 @@ export interface MdslDocument<T> extends MdslNode<ZodType<T>> {
   toGuidance(): string;
   toLlmGuide(): LlmGuide;
   toExampleMarkdown(): string;
+  refine(fn: ValidatorFn<T>): MdslDocument<T>;
 }
 
 export interface ParseResult<T> {
@@ -90,6 +100,7 @@ export const DiagnosticCodes = {
   MISSING_REPEAT_ITEMS: "MISSING_REPEAT_ITEMS",
   COMPOSE_FAILED: "COMPOSE_FAILED",
   ZOD_VALIDATION: "ZOD_VALIDATION",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
   FRONTMATTER_PARSE_ERROR: "FRONTMATTER_PARSE_ERROR",
 } as const;
 
