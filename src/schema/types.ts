@@ -16,6 +16,7 @@ export type MdslKind =
   | { kind: "optional"; inner: MdslNode }
   | { kind: "defaultValue"; inner: MdslNode; fallback: unknown }
   | { kind: "compose"; nodes: MdslNode[] }
+  | { kind: "rule"; name: string; inner: MdslNode }
   | {
       kind: "repeat";
       heading: string | RegExp;

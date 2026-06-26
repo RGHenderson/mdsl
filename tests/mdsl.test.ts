@@ -12,6 +12,7 @@ import {
   defaultValue,
   compose,
   repeat,
+  rule,
   createRegistry,
   formatDiagnostics,
   DiagnosticCodes,
@@ -682,5 +683,59 @@ describe("node.or()", () => {
     });
     const md = `---\ntitle: "T"\n---\n\n## Body\n\nSome text.\n`;
     expect(withOr.parse(md).data?.body.content).toBe(withCompose.parse(md).data?.body.content);
+  });
+});
+
+// ── rule() named/reusable nodes ───────────────────────────────────────────────
+
+describe("rule()", () => {
+  const sharedIngredients = rule(
+    "Shared Ingredients",
+    section("Ingredients", { items: list(z.string()) }),
+  );
+
+  const RecipeWithRule = document({
+    meta: frontmatter(z.object({ title: z.string() })),
+    ingredients: sharedIngredients,
+  });
+
+  const AltRecipeWithRule = document({
+    meta: frontmatter(z.object({ title: z.string(), servings: z.number() })),
+    ingredients: sharedIngredients,
+  });
+
+  const validMd = `---\ntitle: "Soup"\n---\n\n## Ingredients\n\n- Water\n- Salt\n`;
+
+  it("parses identically to the unwrapped node", () => {
+    const plain = document({
+      meta: frontmatter(z.object({ title: z.string() })),
+      ingredients: section("Ingredients", { items: list(z.string()) }),
+    });
+    const ruleResult = RecipeWithRule.parse(validMd);
+    const plainResult = plain.parse(validMd);
+    expect(ruleResult.data).toEqual(plainResult.data);
+  });
+
+  it("can be reused in multiple documents", () => {
+    const r1 = RecipeWithRule.parse(validMd);
+    const altMd = `---\ntitle: "Stew"\nservings: 4\n---\n\n## Ingredients\n\n- Beef\n- Carrots\n`;
+    const r2 = AltRecipeWithRule.parse(altMd);
+    expect(r1.data!.ingredients.items).toEqual(["Water", "Salt"]);
+    expect(r2.data!.ingredients.items).toEqual(["Beef", "Carrots"]);
+  });
+
+  it("annotates diagnostics with the rule name", () => {
+    const badMd = `---\ntitle: "Oops"\n---\n`;
+    const result = RecipeWithRule.parse(badMd);
+    const diag = result.diagnostics.find((d) => d.jsonPath === "ingredients");
+    expect(diag).toBeDefined();
+    expect(diag!.mapping).toContain("Shared Ingredients");
+  });
+
+  it("carries the rule name through to mapping hints in LLM schema", () => {
+    const schema = RecipeWithRule.toLlmJsonSchema() as {
+      properties: Record<string, { description?: string }>;
+    };
+    expect(schema.properties["ingredients"]?.description).toContain("Shared Ingredients");
   });
 });

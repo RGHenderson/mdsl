@@ -12,6 +12,7 @@ export {
   defaultValue,
   compose,
   repeat,
+  rule,
   formatDiagnostics,
 } from "./schema/builders.js";
 

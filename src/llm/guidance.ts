@@ -121,6 +121,11 @@ function describeNode(key: string, node: MdslNode, depth: number): string {
     case "compose":
       return `${pad}- **${key}**: First of [${meta.nodes.map((_, i) => `option ${i + 1}`).join(", ")}] that matches.`;
 
+    case "rule":
+      return describeNode(key, meta.inner, depth).replace(/^\s*[-*]?\s*\*\*[^*]+\*\*/, (m) =>
+        m.replace(/\*\*[^*]+\*\*/, `**${key}** *(rule: ${meta.name})*`),
+      );
+
     default:
       return "";
   }
@@ -195,6 +200,9 @@ function exampleNode(node: MdslNode): string {
     case "compose":
       return meta.nodes[0] ? exampleNode(meta.nodes[0]) : "";
 
+    case "rule":
+      return exampleNode(meta.inner);
+
     default:
       return "";
   }
@@ -259,6 +267,9 @@ function templateNode(node: MdslNode): string {
 
     case "compose":
       return meta.nodes[0] ? templateNode(meta.nodes[0]) : "";
+
+    case "rule":
+      return templateNode(meta.inner);
 
     default:
       return "";

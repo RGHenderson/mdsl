@@ -90,6 +90,9 @@ export function collectMappingHints(
       case "compose":
         hints[path] = "Composed: first matching extractor wins";
         break;
+      case "rule":
+        hints[path] = `${meta.name}: ${hintForNode(meta.inner)}`;
+        break;
     }
   }
 

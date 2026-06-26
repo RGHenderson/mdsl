@@ -408,6 +408,16 @@ export function extractNode(
       return undefined;
     }
 
+    case "rule": {
+      const innerDiags: Diagnostic[] = [];
+      const value = extractNode(ast, meta.inner, jsonPath, innerDiags);
+      // Annotate each diagnostic with the rule name in the mapping field
+      for (const d of innerDiags) {
+        diags.push({ ...d, mapping: d.mapping ? `${meta.name} > ${d.mapping}` : meta.name });
+      }
+      return value;
+    }
+
     default:
       return undefined;
   }

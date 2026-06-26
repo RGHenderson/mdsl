@@ -100,6 +100,11 @@ export function compose<S extends ZodType>(
   return makeNode({ kind: "compose", nodes }, nodes[0].schema);
 }
 
+/** Attach a display name to any node for use in diagnostics and LLM guidance */
+export function rule<S extends ZodType>(name: string, node: MdslNode<S>): MdslNode<S> {
+  return makeNode({ kind: "rule", name, inner: node }, node.schema);
+}
+
 export function heading(depth = 1): MdslNode<ZodString> {
   return makeNode({ kind: "heading", depth }, z.string());
 }
