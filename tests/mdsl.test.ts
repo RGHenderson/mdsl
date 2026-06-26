@@ -627,3 +627,60 @@ A simple soup.
     expect(diag).toBeDefined();
   });
 });
+
+// ── .or() fluent alternation ──────────────────────────────────────────────────
+
+describe("node.or()", () => {
+  const OrDoc = document({
+    meta: frontmatter(z.object({ title: z.string() })),
+    body: section("Body", {
+      content: codeBlock("typescript").or(codeBlock("ts")).or(codeBlock()),
+    }),
+  });
+
+  it("uses the first matching alternative (typescript)", () => {
+    const md = `---\ntitle: "T"\n---\n\n## Body\n\n\`\`\`typescript\nconst x = 1;\n\`\`\`\n`;
+    const result = OrDoc.parse(md);
+    expect(result.data).not.toBeNull();
+    expect(result.data!.body.content).toBe("const x = 1;");
+  });
+
+  it("falls back to second alternative (ts)", () => {
+    const md = `---\ntitle: "T"\n---\n\n## Body\n\n\`\`\`ts\nconst y = 2;\n\`\`\`\n`;
+    const result = OrDoc.parse(md);
+    expect(result.data).not.toBeNull();
+    expect(result.data!.body.content).toBe("const y = 2;");
+  });
+
+  it("falls back to bare code block", () => {
+    const md = `---\ntitle: "T"\n---\n\n## Body\n\n\`\`\`\nplain\n\`\`\`\n`;
+    const result = OrDoc.parse(md);
+    expect(result.data).not.toBeNull();
+    expect(result.data!.body.content).toBe("plain");
+  });
+
+  it("emits COMPOSE_FAILED when no alternative matches", () => {
+    const strict = document({
+      meta: frontmatter(z.object({ title: z.string() })),
+      body: section("Body", {
+        content: codeBlock("typescript").or(codeBlock("ts")),
+      }),
+    });
+    const md = `---\ntitle: "T"\n---\n\n## Body\n\n\`\`\`python\npass\n\`\`\`\n`;
+    const result = strict.parse(md);
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.COMPOSE_FAILED)).toBe(true);
+  });
+
+  it("is equivalent to compose()", () => {
+    const withOr = document({
+      meta: frontmatter(z.object({ title: z.string() })),
+      body: section("Body", { content: prose().or(codeBlock()) }),
+    });
+    const withCompose = document({
+      meta: frontmatter(z.object({ title: z.string() })),
+      body: section("Body", { content: compose(prose(), codeBlock()) }),
+    });
+    const md = `---\ntitle: "T"\n---\n\n## Body\n\nSome text.\n`;
+    expect(withOr.parse(md).data?.body.content).toBe(withCompose.parse(md).data?.body.content);
+  });
+});

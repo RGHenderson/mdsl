@@ -27,6 +27,7 @@ export type MdslKind =
 export interface MdslNode<S extends ZodType = ZodType> {
   [MDSL]: MdslKind;
   schema: S;
+  or(other: MdslNode): MdslNode<S>;
 }
 
 export interface ParseOptions {
