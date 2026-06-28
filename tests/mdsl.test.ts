@@ -739,3 +739,51 @@ describe("rule()", () => {
     expect(schema.properties["ingredients"]?.description).toContain("Shared Ingredients");
   });
 });
+
+// ── Nested sections ───────────────────────────────────────────────────────────
+
+describe("nested sections", () => {
+  const Doc = document({
+    chapter: section("Chapter", {
+      intro: prose(),
+      sub: section("Details", { body: prose(), items: list(z.string()) }, 3),
+    }),
+  });
+
+  const md = [
+    "## Chapter",
+    "",
+    "Chapter intro.",
+    "",
+    "### Details",
+    "",
+    "Details body.",
+    "",
+    "- item one",
+    "- item two",
+  ].join("\n");
+
+  it("parses nested section without bleeding intro prose", () => {
+    const result = Doc.parse(md);
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.chapter.intro).toBe("Chapter intro.");
+    expect(result.data!.chapter.sub.body).toBe("Details body.");
+    expect(result.data!.chapter.sub.items).toEqual(["item one", "item two"]);
+  });
+
+  it("round-trips nested sections cleanly", () => {
+    const result = Doc.parse(md);
+    expect(result.data).not.toBeNull();
+    const serialized = Doc.serialize(result.data!);
+    const reparsed = Doc.parse(serialized);
+    expect(reparsed.diagnostics).toHaveLength(0);
+    expect(reparsed.data!.chapter.intro).toBe(result.data!.chapter.intro);
+    expect(reparsed.data!.chapter.sub.items).toEqual(result.data!.chapter.sub.items);
+  });
+
+  it("reports missing nested section", () => {
+    const noSub = "## Chapter\n\nChapter intro.\n";
+    const result = Doc.parse(noSub);
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_SECTION)).toBe(true);
+  });
+});

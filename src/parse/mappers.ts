@@ -39,6 +39,18 @@ function makeSectionRoot(children: Node[]): Root {
   return { type: "root", children: children as Root["children"] };
 }
 
+/**
+ * Returns a root containing only the "own" content of a section — nodes
+ * before the first child heading. This prevents prose/list/table/codeBlock
+ * extractors from bleeding into nested sub-sections.
+ */
+function ownContentRoot(ast: Root): Root {
+  const children = ast.children as Node[];
+  const firstHeadingIdx = children.findIndex((n) => n.type === "heading");
+  if (firstHeadingIdx === -1) return ast;
+  return makeSectionRoot(children.slice(0, firstHeadingIdx));
+}
+
 function diag(partial: Omit<Diagnostic, "source">): Diagnostic {
   return { ...partial, source: "markdown" };
 }
@@ -359,16 +371,16 @@ export function extractNode(
     }
 
     case "prose":
-      return extractProse(ast, jsonPath, diags);
+      return extractProse(ownContentRoot(ast), jsonPath, diags);
 
     case "codeBlock":
-      return extractCodeBlock(ast, meta.lang, jsonPath, diags);
+      return extractCodeBlock(ownContentRoot(ast), meta.lang, jsonPath, diags);
 
     case "list":
-      return extractList(ast, meta.itemSchema, jsonPath, diags);
+      return extractList(ownContentRoot(ast), meta.itemSchema, jsonPath, diags);
 
     case "table":
-      return extractTable(ast, meta.rowSchema, jsonPath, diags);
+      return extractTable(ownContentRoot(ast), meta.rowSchema, jsonPath, diags);
 
     case "optional": {
       const innerDiags: Diagnostic[] = [];
