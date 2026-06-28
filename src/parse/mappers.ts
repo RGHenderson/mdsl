@@ -137,7 +137,7 @@ export function extractSection(
   depth: number,
   jsonPath: string,
   diags: Diagnostic[],
-): { children: Node[]; position: Point } | undefined {
+): { children: Node[]; position: Point; headingText: string } | undefined {
   const indices = findSectionIndices(ast, heading, depth);
   const label = typeof heading === "string" ? `"${heading}"` : heading.toString();
 
@@ -169,6 +169,7 @@ export function extractSection(
   return {
     children: collectSectionChildren(ast, idx, depth),
     position: (node as Node & { position?: { start: Point } }).position?.start ?? UNKNOWN_POINT,
+    headingText: mdastToString(node).trim(),
   };
 }
 
@@ -345,7 +346,11 @@ export function extractNode(
       const sectionResult = extractSection(ast, meta.heading, meta.depth, jsonPath, diags);
       if (!sectionResult) return undefined;
       const sectionAst = makeSectionRoot(sectionResult.children);
-      return extractFields(sectionAst, meta.fields, jsonPath, diags);
+      const result = extractFields(sectionAst, meta.fields, jsonPath, diags);
+      if (meta.nameField) {
+        (result as Record<string, unknown>)[meta.nameField] = sectionResult.headingText;
+      }
+      return result;
     }
 
     case "repeat": {

@@ -16,17 +16,19 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
     }
 
     case "section": {
-      const heading =
-        typeof meta.heading === "string"
-          ? meta.heading
-          : String(meta.heading).replace(/^\/|\/[gimsuy]*$/g, "");
-      const hashes = "#".repeat(meta.depth);
       if (value == null || typeof value !== "object") return "";
       const obj = value as Record<string, unknown>;
-      const parts: string[] = [`${hashes} ${heading}`];
+      const headingText =
+        meta.nameField && typeof obj[meta.nameField] === "string"
+          ? String(obj[meta.nameField])
+          : typeof meta.heading === "string"
+            ? meta.heading
+            : String(meta.heading).replace(/^\/|\/[gimsuy]*$/g, "");
+      const hashes = "#".repeat(meta.depth);
+      const parts: string[] = [`${hashes} ${headingText}`];
       for (const [key, fieldNode] of Object.entries(meta.fields)) {
-        const fieldValue = obj[key];
-        const fieldStr = serializeNode(fieldValue, fieldNode, depth + 1);
+        if (key === meta.nameField) continue;
+        const fieldStr = serializeNode(obj[key], fieldNode, depth + 1);
         if (fieldStr) parts.push(fieldStr);
       }
       return parts.join("\n\n");

@@ -787,3 +787,33 @@ describe("nested sections", () => {
     expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_SECTION)).toBe(true);
   });
 });
+
+// ── section() nameField ───────────────────────────────────────────────────────
+
+describe("section() nameField", () => {
+  const Doc = document({
+    sprint: section(/sprint \d+/i, { body: prose() }, 2, { nameField: "title" }),
+  });
+
+  it("captures the actual heading text", () => {
+    const result = Doc.parse("## Sprint 42\n\nContent.\n");
+    expect(result.data!.sprint.title).toBe("Sprint 42");
+    expect(result.data!.sprint.body).toBe("Content.");
+  });
+
+  it("round-trips with the captured heading text", () => {
+    const result = Doc.parse("## Sprint 42\n\nContent.\n");
+    const serialized = Doc.serialize(result.data!);
+    expect(serialized).toContain("## Sprint 42");
+    const reparsed = Doc.parse(serialized);
+    expect(reparsed.data!.sprint.title).toBe("Sprint 42");
+  });
+
+  it("also works with a literal string heading", () => {
+    const D = document({
+      intro: section("Introduction", { body: prose() }, 2, { nameField: "heading" }),
+    });
+    const result = D.parse("## Introduction\n\nHello.\n");
+    expect(result.data!.intro.heading).toBe("Introduction");
+  });
+});

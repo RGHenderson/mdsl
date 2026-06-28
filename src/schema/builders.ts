@@ -31,6 +31,11 @@ type FieldsToShape<F extends Record<string, MdslNode>> = {
   [K in keyof F]: F[K] extends MdslNode<infer S> ? S : ZodType;
 };
 
+type WithNameField<
+  F extends Record<string, MdslNode>,
+  N extends string | undefined,
+> = N extends string ? FieldsToShape<F> & { [K in N]: ZodString } : FieldsToShape<F>;
+
 // ── Node factory ─────────────────────────────────────────────────────────────
 
 function makeNode<S extends ZodType>(meta: MdslKind, schema: S): MdslNode<S> {
@@ -50,16 +55,29 @@ export function frontmatter<T extends ZodRawShape>(schema: ZodObject<T>): MdslNo
   return makeNode({ kind: "frontmatter", schema }, schema);
 }
 
-export function section<F extends Record<string, MdslNode>>(
+export function section<
+  F extends Record<string, MdslNode>,
+  N extends string | undefined = undefined,
+>(
   sectionHeading: string | RegExp,
   fields: F,
   depth = 2,
-): MdslNode<ZodObject<FieldsToShape<F>>> {
-  const shape = Object.fromEntries(
+  options?: { nameField?: N },
+): MdslNode<ZodObject<WithNameField<F, N>>> {
+  const nameField = options?.nameField;
+  const shape: Record<string, ZodType> = Object.fromEntries(
     Object.entries(fields).map(([k, v]) => [k, v.schema]),
-  ) as ZodRawShape;
-  const schema = z.object(shape) as ZodObject<FieldsToShape<F>>;
-  return makeNode({ kind: "section", heading: sectionHeading, depth, fields }, schema);
+  );
+  if (nameField) {
+    shape[nameField] = z.string();
+  }
+  const schema = z.object(shape as ZodRawShape) as ZodObject<WithNameField<F, N>>;
+  return makeNode(
+    nameField
+      ? { kind: "section", heading: sectionHeading, depth, fields, nameField }
+      : { kind: "section", heading: sectionHeading, depth, fields },
+    schema,
+  );
 }
 
 export function prose(): MdslNode<ZodString> {

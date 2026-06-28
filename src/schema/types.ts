@@ -8,7 +8,13 @@ export type MdslKind =
   | { kind: "document"; fields: Record<string, MdslNode> }
   | { kind: "frontmatter"; schema: ZodType }
   | { kind: "heading"; depth: number }
-  | { kind: "section"; heading: string | RegExp; depth: number; fields: Record<string, MdslNode> }
+  | {
+      kind: "section";
+      heading: string | RegExp;
+      depth: number;
+      fields: Record<string, MdslNode>;
+      nameField?: string;
+    }
   | { kind: "prose" }
   | { kind: "codeBlock"; lang: string | undefined }
   | { kind: "list"; itemSchema: ZodType }
