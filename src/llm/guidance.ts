@@ -118,6 +118,9 @@ function describeNode(key: string, node: MdslNode, depth: number): string {
     case "defaultValue":
       return `${pad}- **${key}** *(default: ${JSON.stringify(meta.fallback)})*: ${describeNode("", meta.inner, depth).trimStart()}`;
 
+    case "blockquote":
+      return `${pad}- **${key}**: Blockquote (\`> …\` lines).`;
+
     case "compose":
       return `${pad}- **${key}**: First of [${meta.nodes.map((_, i) => `option ${i + 1}`).join(", ")}] that matches.`;
 
@@ -197,6 +200,9 @@ function exampleNode(node: MdslNode): string {
     case "defaultValue":
       return exampleNode(meta.inner);
 
+    case "blockquote":
+      return "> Example blockquote content.";
+
     case "compose":
       return meta.nodes[0] ? exampleNode(meta.nodes[0]) : "";
 
@@ -264,6 +270,9 @@ function templateNode(node: MdslNode): string {
 
     case "defaultValue":
       return templateNode(meta.inner);
+
+    case "blockquote":
+      return "> <blockquote content>";
 
     case "compose":
       return meta.nodes[0] ? templateNode(meta.nodes[0]) : "";

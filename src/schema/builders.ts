@@ -88,6 +88,10 @@ export function codeBlock(lang?: string): MdslNode<ZodString> {
   return makeNode({ kind: "codeBlock", lang: lang as string | undefined }, z.string());
 }
 
+export function blockquote(): MdslNode<ZodString> {
+  return makeNode({ kind: "blockquote" }, z.string());
+}
+
 export function list<T extends ZodType>(itemSchema: T): MdslNode<ZodArray<T>> {
   return makeNode({ kind: "list", itemSchema }, z.array(itemSchema));
 }

@@ -817,3 +817,54 @@ describe("section() nameField", () => {
     expect(result.data!.intro.heading).toBe("Introduction");
   });
 });
+
+// ── blockquote() ──────────────────────────────────────────────────────────────
+
+import { blockquote } from "../src/index.js";
+
+describe("blockquote()", () => {
+  const Doc = document({
+    note: section("Note", {
+      callout: blockquote(),
+      body: prose(),
+    }),
+  });
+
+  const md = "## Note\n\n> This is important!\n\nSome prose.\n";
+
+  it("parses blockquote content", () => {
+    const result = Doc.parse(md);
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.note.callout).toBe("This is important!");
+    expect(result.data!.note.body).toBe("Some prose.");
+  });
+
+  it("serializes with > prefix", () => {
+    const result = Doc.parse(md);
+    const serialized = Doc.serialize(result.data!);
+    expect(serialized).toContain("> This is important!");
+  });
+
+  it("round-trips cleanly", () => {
+    const result = Doc.parse(md);
+    const reparsed = Doc.parse(Doc.serialize(result.data!));
+    expect(reparsed.data!.note.callout).toBe(result.data!.note.callout);
+    expect(reparsed.data!.note.body).toBe(result.data!.note.body);
+  });
+
+  it("emits MISSING_BLOCKQUOTE when absent", () => {
+    const result = Doc.parse("## Note\n\nNo blockquote here.\n");
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_BLOCKQUOTE)).toBe(
+      true,
+    );
+  });
+
+  it("works as optional", () => {
+    const D = document({
+      note: section("Note", { callout: optional(blockquote()), body: prose() }),
+    });
+    const result = D.parse("## Note\n\nJust prose.\n");
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.note.callout).toBeUndefined();
+  });
+});

@@ -5,6 +5,7 @@ export {
   section,
   prose,
   codeBlock,
+  blockquote,
   list,
   listItems,
   table,

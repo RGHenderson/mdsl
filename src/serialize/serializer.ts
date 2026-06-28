@@ -101,9 +101,19 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
     case "defaultValue":
       return serializeNode(value, meta.inner, depth);
 
+    case "blockquote": {
+      const text = typeof value === "string" ? value : "";
+      return text
+        .split("\n")
+        .map((line) => `> ${line}`)
+        .join("\n");
+    }
+
     case "compose":
-      // Serialize uses the first mapping only (matches other plan's known behaviour)
       return meta.nodes[0] ? serializeNode(value, meta.nodes[0], depth) : "";
+
+    case "rule":
+      return serializeNode(value, meta.inner, depth);
 
     default:
       return "";

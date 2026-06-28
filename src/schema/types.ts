@@ -22,6 +22,7 @@ export type MdslKind =
   | { kind: "optional"; inner: MdslNode }
   | { kind: "defaultValue"; inner: MdslNode; fallback: unknown }
   | { kind: "compose"; nodes: MdslNode[] }
+  | { kind: "blockquote" }
   | { kind: "rule"; name: string; inner: MdslNode }
   | {
       kind: "repeat";
@@ -105,6 +106,7 @@ export const DiagnosticCodes = {
   MISSING_TABLE: "MISSING_TABLE",
   INVALID_TABLE: "INVALID_TABLE",
   MISSING_CODE_BLOCK: "MISSING_CODE_BLOCK",
+  MISSING_BLOCKQUOTE: "MISSING_BLOCKQUOTE",
   MISSING_REPEAT_ITEMS: "MISSING_REPEAT_ITEMS",
   COMPOSE_FAILED: "COMPOSE_FAILED",
   ZOD_VALIDATION: "ZOD_VALIDATION",

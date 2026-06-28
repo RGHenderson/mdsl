@@ -1,4 +1,4 @@
-import type { Root, Heading, Node } from "mdast";
+import type { Root, Heading, Node, Blockquote } from "mdast";
 import type { Point } from "unist";
 import type { ZodType } from "zod";
 import { toString as mdastToString } from "mdast-util-to-string";
@@ -229,6 +229,29 @@ export function extractCodeBlock(
   return undefined;
 }
 
+export function extractBlockquote(
+  ast: Root,
+  jsonPath: string,
+  diags: Diagnostic[],
+): string | undefined {
+  for (const node of ast.children as Node[]) {
+    if (node.type === "blockquote") {
+      return toMarkdown(makeSectionRoot((node as Blockquote).children as Node[]), {
+        extensions: [gfmToMarkdown()],
+      }).trim();
+    }
+  }
+  diags.push({
+    severity: "error",
+    message: "Missing required blockquote",
+    code: DiagnosticCodes.MISSING_BLOCKQUOTE,
+    mdLocation: UNKNOWN_POINT,
+    jsonPath,
+    mapping: "blockquote()",
+  });
+  return undefined;
+}
+
 export function extractList(
   ast: Root,
   itemSchema: ZodType,
@@ -374,6 +397,9 @@ export function extractNode(
         return item;
       });
     }
+
+    case "blockquote":
+      return extractBlockquote(ownContentRoot(ast), jsonPath, diags);
 
     case "prose":
       return extractProse(ownContentRoot(ast), jsonPath, diags);
