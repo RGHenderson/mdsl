@@ -30,6 +30,7 @@ export type MdslKind =
       depth: number;
       fields: Record<string, MdslNode>;
       nameField?: string;
+      minItems?: number;
     };
 
 export interface MdslNode<S extends ZodType = ZodType> {

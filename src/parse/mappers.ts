@@ -381,7 +381,8 @@ export function extractNode(
 
     case "repeat": {
       const occurrences = extractRepeatSections(ast, meta.heading, meta.depth);
-      if (occurrences.length === 0) {
+      const minItems = meta.minItems ?? 1;
+      if (occurrences.length < minItems) {
         diags.push({
           severity: "error",
           message: `Missing required repeat section: "${String(meta.heading)}"`,

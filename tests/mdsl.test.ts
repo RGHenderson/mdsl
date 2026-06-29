@@ -993,6 +993,34 @@ describe("regex heading serialization", () => {
   });
 });
 
+// ── repeat() minItems ─────────────────────────────────────────────────────────
+
+describe("repeat() minItems option", () => {
+  it("errors when no occurrences found with default minItems: 1", () => {
+    const Doc = document({ steps: repeat("Step", { body: prose() }) });
+    const result = Doc.parse("## Other\n\nHello.\n");
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_REPEAT_ITEMS)).toBe(
+      true,
+    );
+  });
+
+  it("does not error with zero occurrences when minItems: 0", () => {
+    const Doc = document({ steps: repeat("Step", { body: prose() }, 2, { minItems: 0 }) });
+    const result = Doc.parse("## Other\n\nHello.\n");
+    expect(
+      result.diagnostics.filter((d) => d.code === DiagnosticCodes.MISSING_REPEAT_ITEMS),
+    ).toHaveLength(0);
+    expect(result.data!.steps).toEqual([]);
+  });
+
+  it("returns found items normally when minItems: 0 and items exist", () => {
+    const Doc = document({ steps: repeat("Step", { body: prose() }, 2, { minItems: 0 }) });
+    const result = Doc.parse("## Step\n\nContent.\n");
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.steps).toHaveLength(1);
+  });
+});
+
 // ── repeat() field type inference ─────────────────────────────────────────────
 
 describe("repeat() field type inference", () => {

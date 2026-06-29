@@ -138,6 +138,8 @@ export function listItems(): MdslNode<ZodArray<ZodString>> {
 export type RepeatOptions = {
   /** When set, the repeat heading text is stored on each item under this field name */
   nameField?: string;
+  /** Minimum number of occurrences required. Defaults to 1. Set to 0 for zero-or-more. */
+  minItems?: number;
 };
 
 /** Extract a repeated heading as an array of objects */
@@ -148,9 +150,10 @@ export function repeat<
   sectionHeading: string | RegExp,
   fields: F,
   depth = 2,
-  options?: { nameField?: N },
+  options?: { nameField?: N; minItems?: number },
 ): MdslNode<ZodArray<ZodObject<WithNameField<F, N>>>> {
   const nameField = options?.nameField;
+  const minItems = options?.minItems;
   const shape: Record<string, ZodType> = Object.fromEntries(
     Object.entries(fields).map(([k, v]) => [k, v.schema]),
   );
@@ -158,9 +161,14 @@ export function repeat<
     shape[nameField] = z.string();
   }
   const itemSchema = z.object(shape as ZodRawShape) as ZodObject<WithNameField<F, N>>;
-  const kind: MdslKind = nameField
-    ? { kind: "repeat", heading: sectionHeading, depth, fields, nameField }
-    : { kind: "repeat", heading: sectionHeading, depth, fields };
+  const kind: MdslKind =
+    nameField !== undefined && minItems !== undefined
+      ? { kind: "repeat", heading: sectionHeading, depth, fields, nameField, minItems }
+      : nameField !== undefined
+        ? { kind: "repeat", heading: sectionHeading, depth, fields, nameField }
+        : minItems !== undefined
+          ? { kind: "repeat", heading: sectionHeading, depth, fields, minItems }
+          : { kind: "repeat", heading: sectionHeading, depth, fields };
   return makeNode(kind, z.array(itemSchema));
 }
 
