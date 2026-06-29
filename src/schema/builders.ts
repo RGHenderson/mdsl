@@ -107,6 +107,10 @@ export function orderedList<T extends ZodType>(itemSchema: T): MdslNode<ZodArray
   return list(itemSchema, { ordered: true });
 }
 
+export function codeBlocks(lang?: string): MdslNode<ZodArray<ZodString>> {
+  return makeNode({ kind: "codeBlocks", lang: lang as string | undefined }, z.array(z.string()));
+}
+
 export function table<T extends ZodType>(rowSchema: T): MdslNode<ZodArray<T>> {
   return makeNode({ kind: "table", rowSchema }, z.array(rowSchema));
 }

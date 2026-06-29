@@ -58,6 +58,13 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
         .join("\n");
     }
 
+    case "codeBlocks": {
+      const blocks = Array.isArray(value) ? (value as string[]) : [];
+      if (blocks.length === 0) return "";
+      const lang = meta.lang ?? "";
+      return blocks.map((block) => `\`\`\`${lang}\n${block}\n\`\`\``).join("\n\n");
+    }
+
     case "table": {
       const rows = Array.isArray(value) ? value : [];
       if (rows.length === 0) return "";

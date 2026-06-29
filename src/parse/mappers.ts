@@ -252,6 +252,34 @@ export function extractBlockquote(
   return undefined;
 }
 
+export function extractCodeBlocks(
+  ast: Root,
+  lang: string | undefined,
+  jsonPath: string,
+  diags: Diagnostic[],
+): string[] {
+  const blocks: string[] = [];
+  for (const node of ast.children) {
+    if (node.type === "code") {
+      if (!lang || (node.lang ?? "").toLowerCase() === lang.toLowerCase()) {
+        blocks.push(node.value);
+      }
+    }
+  }
+  if (blocks.length === 0) {
+    const label = lang ? `language "${lang}"` : "any language";
+    diags.push({
+      severity: "error",
+      message: `Missing required code block with ${label}`,
+      code: DiagnosticCodes.MISSING_CODE_BLOCK,
+      mdLocation: UNKNOWN_POINT,
+      jsonPath,
+      mapping: "codeBlocks()",
+    });
+  }
+  return blocks;
+}
+
 export function extractList(
   ast: Root,
   itemSchema: ZodType,
@@ -412,6 +440,9 @@ export function extractNode(
 
     case "codeBlock":
       return extractCodeBlock(ownContentRoot(ast), meta.lang, jsonPath, diags);
+
+    case "codeBlocks":
+      return extractCodeBlocks(ownContentRoot(ast), meta.lang, jsonPath, diags);
 
     case "list":
       return extractList(ownContentRoot(ast), meta.itemSchema, jsonPath, diags, meta.ordered);

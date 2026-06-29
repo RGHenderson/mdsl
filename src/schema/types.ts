@@ -17,6 +17,7 @@ export type MdslKind =
     }
   | { kind: "prose" }
   | { kind: "codeBlock"; lang: string | undefined }
+  | { kind: "codeBlocks"; lang: string | undefined }
   | { kind: "list"; itemSchema: ZodType; ordered?: boolean }
   | { kind: "table"; rowSchema: ZodType }
   | { kind: "optional"; inner: MdslNode }

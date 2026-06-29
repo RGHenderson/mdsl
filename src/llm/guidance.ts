@@ -102,6 +102,9 @@ function describeNode(key: string, node: MdslNode, depth: number): string {
     case "codeBlock":
       return `${pad}- **${key}**: Fenced code block${meta.lang ? ` (\`${meta.lang}\`)` : ""}.`;
 
+    case "codeBlocks":
+      return `${pad}- **${key}**: All fenced code blocks${meta.lang ? ` (\`${meta.lang}\`)` : ""} in the section as an array.`;
+
     case "list": {
       const desc = meta.itemSchema.description;
       const listType = meta.ordered ? "Ordered (numbered)" : "Unordered";
@@ -179,6 +182,9 @@ function exampleNode(node: MdslNode): string {
     case "codeBlock":
       return `\`\`\`${meta.lang ?? ""}\n// example code\n\`\`\``;
 
+    case "codeBlocks":
+      return `\`\`\`${meta.lang ?? ""}\n// first block\n\`\`\`\n\n\`\`\`${meta.lang ?? ""}\n// second block\n\`\`\``;
+
     case "list": {
       const item = generateExampleData(meta.itemSchema);
       const itemStr = typeof item === "string" ? item : JSON.stringify(item);
@@ -254,6 +260,9 @@ function templateNode(node: MdslNode): string {
       return "<prose>";
 
     case "codeBlock":
+      return `\`\`\`${meta.lang ?? ""}\n<code>\n\`\`\``;
+
+    case "codeBlocks":
       return `\`\`\`${meta.lang ?? ""}\n<code>\n\`\`\``;
 
     case "list":

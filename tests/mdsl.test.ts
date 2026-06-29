@@ -13,6 +13,7 @@ import {
   compose,
   repeat,
   orderedList,
+  codeBlocks,
   rule,
   createRegistry,
   formatDiagnostics,
@@ -991,6 +992,46 @@ describe("regex heading serialization", () => {
     const { data } = Doc.parse("## Step 1\n\nA.\n\n## Step 2\n\nB.\n");
     expect(data).not.toBeNull();
     expect(() => Doc.serialize(data!)).toThrow(/nameField/);
+  });
+});
+
+// ── codeBlocks() ──────────────────────────────────────────────────────────────
+
+describe("codeBlocks()", () => {
+  const Doc = document({ examples: section("Examples", { blocks: codeBlocks("ts") }) });
+
+  it("parses multiple matching code blocks into an array", () => {
+    const md = "## Examples\n\n```ts\nconst a = 1;\n```\n\n```ts\nconst b = 2;\n```\n";
+    const result = Doc.parse(md);
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.examples.blocks).toEqual(["const a = 1;", "const b = 2;"]);
+  });
+
+  it("filters out blocks with a different language", () => {
+    const md = "## Examples\n\n```ts\nconst a = 1;\n```\n\n```js\nconsole.log()\n```\n";
+    const result = Doc.parse(md);
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.examples.blocks).toEqual(["const a = 1;"]);
+  });
+
+  it("errors when no matching blocks exist", () => {
+    const result = Doc.parse("## Examples\n\n```js\nconsole.log()\n```\n");
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_CODE_BLOCK)).toBe(
+      true,
+    );
+  });
+
+  it("serializes all blocks separated by blank lines", () => {
+    const out = Doc.serialize({ examples: { blocks: ["const a = 1;", "const b = 2;"] } });
+    expect(out).toContain("```ts\nconst a = 1;\n```");
+    expect(out).toContain("```ts\nconst b = 2;\n```");
+  });
+
+  it("round-trips through parse → serialize → parse", () => {
+    const md = "## Examples\n\n```ts\nconst a = 1;\n```\n\n```ts\nconst b = 2;\n```\n";
+    const first = Doc.parse(md);
+    const second = Doc.parse(Doc.serialize(first.data!));
+    expect(second.data!.examples.blocks).toEqual(first.data!.examples.blocks);
   });
 });
 

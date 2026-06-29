@@ -5,6 +5,7 @@ export {
   section,
   prose,
   codeBlock,
+  codeBlocks,
   blockquote,
   list,
   orderedList,
