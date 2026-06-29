@@ -942,6 +942,29 @@ describe("Zod transforms", () => {
   });
 });
 
+// ── blockquote() serialization ────────────────────────────────────────────────
+
+describe("blockquote() serialization", () => {
+  const Doc = document({ quote: section("Quote", { text: blockquote() }) });
+
+  it("round-trips a single-line blockquote", () => {
+    const md = "## Quote\n\n> Simple quote.\n";
+    const { data } = Doc.parse(md);
+    const out = Doc.serialize(data!);
+    const second = Doc.parse(out);
+    expect(second.data!.quote.text).toBe(data!.quote.text);
+  });
+
+  it("uses bare > for blank lines in multi-paragraph blockquote", () => {
+    const md = "## Quote\n\n> First paragraph.\n>\n> Second paragraph.\n";
+    const { data } = Doc.parse(md);
+    expect(data).not.toBeNull();
+    const out = Doc.serialize(data!);
+    expect(out).toMatch(/^>$/m);
+    expect(out).not.toMatch(/^> $/m);
+  });
+});
+
 // ── repeat() field type inference ─────────────────────────────────────────────
 
 describe("repeat() field type inference", () => {

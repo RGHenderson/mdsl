@@ -103,9 +103,10 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
 
     case "blockquote": {
       const text = typeof value === "string" ? value : "";
+      if (!text) return "";
       return text
         .split("\n")
-        .map((line) => `> ${line}`)
+        .map((line) => (line === "" ? ">" : `> ${line}`))
         .join("\n");
     }
 
