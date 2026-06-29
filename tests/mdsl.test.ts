@@ -14,6 +14,7 @@ import {
   repeat,
   orderedList,
   codeBlocks,
+  image,
   rule,
   createRegistry,
   formatDiagnostics,
@@ -992,6 +993,48 @@ describe("regex heading serialization", () => {
     const { data } = Doc.parse("## Step 1\n\nA.\n\n## Step 2\n\nB.\n");
     expect(data).not.toBeNull();
     expect(() => Doc.serialize(data!)).toThrow(/nameField/);
+  });
+});
+
+// ── image() ───────────────────────────────────────────────────────────────────
+
+describe("image()", () => {
+  const Doc = document({ figure: section("Figure", { img: image() }) });
+
+  it("parses an image with alt and url", () => {
+    const result = Doc.parse("## Figure\n\n![A cat](cat.png)\n");
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.figure.img).toEqual({ alt: "A cat", url: "cat.png" });
+  });
+
+  it("parses an image with a title", () => {
+    const result = Doc.parse('## Figure\n\n![A cat](cat.png "Fluffy")\n');
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.figure.img.title).toBe("Fluffy");
+  });
+
+  it("errors when no image is present", () => {
+    const result = Doc.parse("## Figure\n\nJust some prose.\n");
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_IMAGE)).toBe(true);
+  });
+
+  it("serializes an image without title", () => {
+    const out = Doc.serialize({ figure: { img: { alt: "A cat", url: "cat.png" } } });
+    expect(out).toContain("![A cat](cat.png)");
+  });
+
+  it("serializes an image with title", () => {
+    const out = Doc.serialize({
+      figure: { img: { alt: "A cat", url: "cat.png", title: "Fluffy" } },
+    });
+    expect(out).toContain('![A cat](cat.png "Fluffy")');
+  });
+
+  it("round-trips through parse → serialize → parse", () => {
+    const md = '## Figure\n\n![Diagram](arch.png "Architecture")\n';
+    const first = Doc.parse(md);
+    const second = Doc.parse(Doc.serialize(first.data!));
+    expect(second.data!.figure.img).toEqual(first.data!.figure.img);
   });
 });
 

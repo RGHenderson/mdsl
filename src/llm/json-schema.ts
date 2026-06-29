@@ -81,6 +81,9 @@ export function collectMappingHints(
       case "codeBlocks":
         hints[path] = `All code blocks${meta.lang ? ` (language: ${meta.lang})` : ""} as an array`;
         break;
+      case "image":
+        hints[path] = "Markdown image — { alt, url, title? }";
+        break;
       case "table":
         hints[path] = "GFM table rows";
         break;

@@ -111,6 +111,18 @@ export function codeBlocks(lang?: string): MdslNode<ZodArray<ZodString>> {
   return makeNode({ kind: "codeBlocks", lang: lang as string | undefined }, z.array(z.string()));
 }
 
+const imageSchema = z.object({
+  alt: z.string(),
+  url: z.string(),
+  title: z.string().optional(),
+});
+
+export type ImageValue = z.infer<typeof imageSchema>;
+
+export function image(): MdslNode<typeof imageSchema> {
+  return makeNode({ kind: "image" }, imageSchema);
+}
+
 export function table<T extends ZodType>(rowSchema: T): MdslNode<ZodArray<T>> {
   return makeNode({ kind: "table", rowSchema }, z.array(rowSchema));
 }

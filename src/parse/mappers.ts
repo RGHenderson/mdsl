@@ -1,4 +1,4 @@
-import type { Root, Heading, Node, Blockquote } from "mdast";
+import type { Root, Heading, Node, Blockquote, Image, Paragraph } from "mdast";
 import type { Point } from "unist";
 import type { ZodType } from "zod";
 import { toString as mdastToString } from "mdast-util-to-string";
@@ -252,6 +252,36 @@ export function extractBlockquote(
   return undefined;
 }
 
+export function extractImage(
+  ast: Root,
+  jsonPath: string,
+  diags: Diagnostic[],
+): { alt: string; url: string; title?: string } | undefined {
+  for (const node of ast.children as Node[]) {
+    if (node.type === "paragraph") {
+      for (const child of (node as Paragraph).children) {
+        if (child.type === "image") {
+          const img = child as Image;
+          return {
+            alt: img.alt ?? "",
+            url: img.url ?? "",
+            ...(img.title != null ? { title: img.title } : {}),
+          };
+        }
+      }
+    }
+  }
+  diags.push({
+    severity: "error",
+    message: "Missing required image",
+    code: DiagnosticCodes.MISSING_IMAGE,
+    mdLocation: UNKNOWN_POINT,
+    jsonPath,
+    mapping: "image()",
+  });
+  return undefined;
+}
+
 export function extractCodeBlocks(
   ast: Root,
   lang: string | undefined,
@@ -443,6 +473,9 @@ export function extractNode(
 
     case "codeBlocks":
       return extractCodeBlocks(ownContentRoot(ast), meta.lang, jsonPath, diags);
+
+    case "image":
+      return extractImage(ownContentRoot(ast), jsonPath, diags);
 
     case "list":
       return extractList(ownContentRoot(ast), meta.itemSchema, jsonPath, diags, meta.ordered);

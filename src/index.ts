@@ -7,6 +7,7 @@ export {
   codeBlock,
   codeBlocks,
   blockquote,
+  image,
   list,
   orderedList,
   listItems,
@@ -19,7 +20,7 @@ export {
   formatDiagnostics,
 } from "./schema/builders.js";
 
-export type { infer, RepeatOptions } from "./schema/builders.js";
+export type { infer, RepeatOptions, ImageValue } from "./schema/builders.js";
 
 export { createRegistry } from "./schema/registry.js";
 

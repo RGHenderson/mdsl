@@ -58,6 +58,13 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
         .join("\n");
     }
 
+    case "image": {
+      if (value == null || typeof value !== "object") return "";
+      const img = value as { alt?: string; url?: string; title?: string };
+      const titlePart = img.title ? ` "${img.title}"` : "";
+      return `![${img.alt ?? ""}](${img.url ?? ""}${titlePart})`;
+    }
+
     case "codeBlocks": {
       const blocks = Array.isArray(value) ? (value as string[]) : [];
       if (blocks.length === 0) return "";

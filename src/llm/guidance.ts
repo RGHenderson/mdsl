@@ -105,6 +105,9 @@ function describeNode(key: string, node: MdslNode, depth: number): string {
     case "codeBlocks":
       return `${pad}- **${key}**: All fenced code blocks${meta.lang ? ` (\`${meta.lang}\`)` : ""} in the section as an array.`;
 
+    case "image":
+      return `${pad}- **${key}**: Markdown image (\`![alt](url)\`), captured as \`{ alt, url, title? }\`.`;
+
     case "list": {
       const desc = meta.itemSchema.description;
       const listType = meta.ordered ? "Ordered (numbered)" : "Unordered";
@@ -185,6 +188,9 @@ function exampleNode(node: MdslNode): string {
     case "codeBlocks":
       return `\`\`\`${meta.lang ?? ""}\n// first block\n\`\`\`\n\n\`\`\`${meta.lang ?? ""}\n// second block\n\`\`\``;
 
+    case "image":
+      return `![Example image](https://example.com/image.png)`;
+
     case "list": {
       const item = generateExampleData(meta.itemSchema);
       const itemStr = typeof item === "string" ? item : JSON.stringify(item);
@@ -264,6 +270,9 @@ function templateNode(node: MdslNode): string {
 
     case "codeBlocks":
       return `\`\`\`${meta.lang ?? ""}\n<code>\n\`\`\``;
+
+    case "image":
+      return `![<alt text>](<url>)`;
 
     case "list":
       return meta.ordered ? "1. <item>" : "- <item>";
