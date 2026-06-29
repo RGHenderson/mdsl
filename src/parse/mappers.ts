@@ -276,22 +276,24 @@ export function extractList(
                 jsonPath: `${itemPath}.${issue.path.join(".")}`,
               });
             });
-            return parsed;
           }
-          return result.data;
+          // Return the natural (pre-transform) value so the document-level
+          // safeParse can apply Zod transforms exactly once on the right input.
+          return parsed;
         } catch {
           const result = itemSchema.safeParse(text);
           if (!result.success) {
-            diags.push({
-              severity: "error",
-              message: `List item at index ${idx} failed validation`,
-              code: DiagnosticCodes.ZOD_VALIDATION,
-              mdLocation: item.position?.start ?? UNKNOWN_POINT,
-              jsonPath: itemPath,
+            result.error.issues.forEach((issue) => {
+              diags.push({
+                severity: "error",
+                message: issue.message,
+                code: DiagnosticCodes.ZOD_VALIDATION,
+                mdLocation: item.position?.start ?? UNKNOWN_POINT,
+                jsonPath: issue.path.length > 0 ? `${itemPath}.${issue.path.join(".")}` : itemPath,
+              });
             });
-            return text;
           }
-          return result.data;
+          return text;
         }
       });
     }
@@ -334,9 +336,10 @@ export function extractTable(
               jsonPath: `${jsonPath}[${rowIdx}].${issue.path.join(".")}`,
             });
           });
-          return rowObj;
         }
-        return result.data;
+        // Return natural (pre-transform) rowObj so document-level safeParse
+        // applies transforms exactly once.
+        return rowObj;
       });
     }
   }

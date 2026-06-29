@@ -868,3 +868,76 @@ describe("blockquote()", () => {
     expect(result.data!.note.callout).toBeUndefined();
   });
 });
+
+// ── Zod transforms in list() and table() ──────────────────────────────────────
+
+describe("Zod transforms", () => {
+  describe("list() with type-changing transform", () => {
+    const Doc = document({
+      items: section("Items", {
+        tags: list(
+          z.string().transform((s) => ({ label: s, slug: s.toLowerCase().replace(/\s+/g, "-") })),
+        ),
+      }),
+    });
+
+    const md = "## Items\n\n- Hello World\n- Foo Bar\n";
+
+    it("applies transform and returns structured objects", () => {
+      const result = Doc.parse(md);
+      expect(result.diagnostics).toHaveLength(0);
+      expect(result.data!.items.tags).toEqual([
+        { label: "Hello World", slug: "hello-world" },
+        { label: "Foo Bar", slug: "foo-bar" },
+      ]);
+    });
+
+    it("still reports validation errors with line numbers", () => {
+      const StrictDoc = document({
+        items: section("Items", {
+          nums: list(z.string().refine((s) => /^\d+$/.test(s), { message: "must be numeric" })),
+        }),
+      });
+      const result = StrictDoc.parse("## Items\n\n- 123\n- abc\n");
+      expect(result.diagnostics.some((d) => d.message === "must be numeric")).toBe(true);
+      expect(
+        result.diagnostics.find((d) => d.message === "must be numeric")?.mdLocation.line,
+      ).toBeGreaterThan(0);
+    });
+  });
+
+  describe("table() with type-changing transform", () => {
+    const Doc = document({
+      scores: section("Scores", {
+        rows: table(
+          z
+            .object({ name: z.string(), score: z.string() })
+            .transform((r) => ({ name: r.name, score: Number(r.score) })),
+        ),
+      }),
+    });
+
+    const md = "## Scores\n\n| name | score |\n| --- | --- |\n| Alice | 95 |\n| Bob | 87 |\n";
+
+    it("applies transform and coerces types", () => {
+      const result = Doc.parse(md);
+      expect(result.diagnostics).toHaveLength(0);
+      expect(result.data!.scores.rows).toEqual([
+        { name: "Alice", score: 95 },
+        { name: "Bob", score: 87 },
+      ]);
+    });
+
+    it("still reports missing column errors with row position", () => {
+      const StrictDoc = document({
+        scores: section("Scores", {
+          rows: table(z.object({ name: z.string(), value: z.string().min(1) })),
+        }),
+      });
+      const result = StrictDoc.parse(
+        "## Scores\n\n| name | extra |\n| --- | --- |\n| Alice | x |\n",
+      );
+      expect(result.diagnostics.length).toBeGreaterThan(0);
+    });
+  });
+});
