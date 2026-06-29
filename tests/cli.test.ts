@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { document, frontmatter, heading, prose, section } from "../src/index.js";
+import { document, frontmatter, title, prose, section } from "../src/index.js";
 import { runCli } from "../src/cli-runner.js";
 
 const Doc = document({
   meta: frontmatter(z.object({ status: z.string() })),
-  title: heading(1),
+  title: title(),
   summary: section("Summary", { body: prose() }),
 });
 

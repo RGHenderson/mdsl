@@ -19,13 +19,12 @@ meta: frontmatter(
 ),
 ```
 
-## `heading(depth?)` / `title()`
+## `title()`
 
-Extracts a heading's text at the given depth (default `1`). `title()` is a named shorthand for `heading(1)` — use it when capturing a document's primary `#` heading.
+Captures the document's primary `#` heading text.
 
 ```typescript
-name: title(),    // # My Document → "My Document"
-sub: heading(2),  // ## Sub-heading → "Sub-heading"
+name: title(),  // # My Document → "My Document"
 ```
 
 ## `section(heading, fields, depth?, options?)`
@@ -115,10 +114,6 @@ steps: orderedList(z.string()),
 // 1. First\n2. Second → ["First", "Second"]
 ```
 
-## `listItems()`
-
-Sugar for `list(z.string())`.
-
 ## `table(rowSchema)`
 
 GFM table rows validated against a Zod object. **Column headers in markdown must match the object's keys**:
@@ -178,12 +173,12 @@ Field may be absent without error:
 rollback: optional(section("Rollback", { body: prose() })),
 ```
 
-## `defaultValue(node, fallback)`
+## `withDefault(node, fallback)`
 
 Uses fallback when the inner node cannot be extracted:
 
 ```typescript
-notes: defaultValue(section("Notes", { body: prose() }), { body: "No notes." }),
+notes: withDefault(section("Notes", { body: prose() }), { body: "No notes." }),
 ```
 
 ## `compose(...nodes)`

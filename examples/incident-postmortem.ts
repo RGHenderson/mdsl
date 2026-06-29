@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   document,
   frontmatter,
-  heading,
+  title,
   list,
   optional,
   prose,
@@ -20,7 +20,7 @@ export const IncidentPostmortem = document({
       reviewers: z.array(z.string()),
     }),
   ),
-  title: heading(1),
+  title: title(),
   summary: section("Summary", { body: prose() }),
   rollback: optional(section("Rollback", { body: prose() })),
   timeline: section("Timeline", {

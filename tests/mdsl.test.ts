@@ -9,12 +9,11 @@ import {
   list,
   table,
   optional,
-  defaultValue,
+  withDefault,
   compose,
   repeat,
   orderedList,
   codeBlocks,
-  heading,
   title,
   image,
   rule,
@@ -22,8 +21,8 @@ import {
   formatDiagnostics,
   DiagnosticCodes,
   MdslError,
-  generateExampleData,
 } from "../src/index.js";
+import { generateExampleData } from "../src/llm/guidance.js";
 
 // ── Fixture schema ────────────────────────────────────────────────────────────
 
@@ -351,10 +350,10 @@ describe("optional()", () => {
   });
 });
 
-describe("defaultValue()", () => {
+describe("withDefault()", () => {
   const DocWithDefault = document({
     meta: frontmatter(z.object({ title: z.string() })),
-    notes: defaultValue(section("Notes", { body: prose() }), { body: "No notes provided." }),
+    notes: withDefault(section("Notes", { body: prose() }), { body: "No notes provided." }),
   });
 
   it("returns fallback when section is missing", () => {
@@ -1009,10 +1008,10 @@ describe("title()", () => {
     expect(result.data!.name).toBe("My Document");
   });
 
-  it("is equivalent to heading(1)", () => {
-    const DocHeading = document({ name: heading(1) });
+  it("captures the H1 heading text like title()", () => {
+    const DocTitle = document({ name: title() });
     const md = "# Hello\n\nContent.\n";
-    expect(Doc.parse(md).data!.name).toBe(DocHeading.parse(md).data!.name);
+    expect(Doc.parse(md).data!.name).toBe(DocTitle.parse(md).data!.name);
   });
 });
 

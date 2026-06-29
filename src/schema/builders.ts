@@ -133,7 +133,7 @@ export function optional<S extends ZodType>(node: MdslNode<S>): MdslNode<ZodOpti
   return makeNode({ kind: "optional", inner: node }, node.schema.optional());
 }
 
-export function defaultValue<S extends ZodType, T>(
+export function withDefault<S extends ZodType, T>(
   node: MdslNode<S>,
   fallback: T,
 ): MdslNode<ZodDefault<S>> {
@@ -156,10 +156,6 @@ export function rule<S extends ZodType>(name: string, node: MdslNode<S>): MdslNo
 
 export function heading(depth = 1): MdslNode<ZodString> {
   return makeNode({ kind: "heading", depth }, z.string());
-}
-
-export function listItems(): MdslNode<ZodArray<ZodString>> {
-  return list(z.string());
 }
 
 export function title(): MdslNode<ZodString> {

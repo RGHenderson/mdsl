@@ -1,7 +1,6 @@
 export {
   document,
   frontmatter,
-  heading,
   title,
   section,
   prose,
@@ -11,10 +10,9 @@ export {
   image,
   list,
   orderedList,
-  listItems,
   table,
   optional,
-  defaultValue,
+  withDefault,
   compose,
   repeat,
   rule,
@@ -38,18 +36,8 @@ export type {
   MdslPoint,
   MdslPosition,
   InferDocument,
-  InferMdsl,
   ValidationContext,
   ValidatorFn,
 } from "./schema/types.js";
 
 export type { Registry, MatchContext, MatchFn } from "./schema/registry.js";
-
-export { generateExampleData } from "./llm/guidance.js";
-export { collectMappingHints } from "./llm/json-schema.js";
-
-export { remarkMdsl } from "./remark-plugin.js";
-export type { RemarkMdslOptions } from "./remark-plugin.js";
-
-export { runCli, loadDocument, printHelp } from "./cli-runner.js";
-export type { CliIo, CliResult } from "./cli-runner.js";

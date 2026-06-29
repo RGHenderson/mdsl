@@ -72,13 +72,12 @@ section("Details", { notes: prose() }, 3); // ### Details
 
 Captures free-form paragraph text within the current section.
 
-### `heading(depth?)` / `title()`
+### `title()`
 
-Captures a heading's text at the given depth. `title()` is a shorthand for `heading(1)` and is the idiomatic way to capture a document's primary `#` heading.
+Captures the document's primary `#` heading text.
 
 ```ts
-title();       // # My Document
-heading(2);    // ## Sub-heading
+title();  // # My Document → "My Document"
 ```
 
 ### `codeBlock(lang?)`
@@ -168,12 +167,12 @@ Makes any node optional — returns `undefined` rather than emitting a diagnosti
 optional(section("Notes", { body: prose() }));
 ```
 
-### `defaultValue(node, fallback)`
+### `withDefault(node, fallback)`
 
 Like `optional`, but returns `fallback` when the node is missing.
 
 ```ts
-defaultValue(codeBlock("json"), "{}");
+withDefault(codeBlock("json"), "{}");
 ```
 
 ### `compose(...nodes)`
@@ -274,7 +273,7 @@ Definition modules must export a compiled `.js` `MdslDocument`. See [`docs/cli.m
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
-import { remarkMdsl } from "@rghenderson/mdsl";
+import { remarkMdsl } from "@rghenderson/mdsl/remark";
 
 const file = await unified()
   .use(remarkParse)

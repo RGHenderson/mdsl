@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { document, frontmatter, heading, list, prose, section, table } from "../src/index.js";
+import { document, frontmatter, title, list, prose, section, table } from "../src/index.js";
 
 export const SpecDoc = document({
   meta: frontmatter(
@@ -8,7 +8,7 @@ export const SpecDoc = document({
       owner: z.string(),
     }),
   ),
-  title: heading(1),
+  title: title(),
   summary: section("Summary", { body: prose() }),
   requirements: section("Requirements", { items: list(z.string()) }),
   api: section("API", {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { document, frontmatter, section, prose, codeBlock, list, table, formatDiagnostics } from '../src/index.js';
+import { document, frontmatter, section, prose, code, list, table, formatDiagnostics } from '../src/index.js';
 
 // ── Schema definition ─────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ const RecipeDoc = document({
   }),
   instructions: section('Instructions', {
     steps: list(z.string().describe('A single cooking step')),
-    tip: codeBlock('tip'),
+    tip: code('tip'),
   }),
   nutrition: section('Nutrition', {
     rows: table(

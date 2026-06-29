@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { document, frontmatter, heading, prose, repeat, section } from "../src/index.js";
+import { document, frontmatter, title, prose, repeat, section } from "../src/index.js";
 
 export const Runbook = document({
   meta: frontmatter(
@@ -7,7 +7,7 @@ export const Runbook = document({
       status: z.enum(["draft", "active"]),
     }),
   ),
-  title: heading(1),
+  title: title(),
   steps: section("Steps", {
     items: repeat(
       /.+/,

@@ -49,6 +49,26 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./cli": {
+      "import": {
+        "types": "./dist/cli-entrypoint.d.ts",
+        "default": "./dist/cli-entrypoint.js"
+      },
+      "require": {
+        "types": "./dist/cli-entrypoint.d.cts",
+        "default": "./dist/cli-entrypoint.cjs"
+      }
+    },
+    "./remark": {
+      "import": {
+        "types": "./dist/remark-entrypoint.d.ts",
+        "default": "./dist/remark-entrypoint.js"
+      },
+      "require": {
+        "types": "./dist/remark-entrypoint.d.cts",
+        "default": "./dist/remark-entrypoint.cjs"
+      }
     }
   },
   "scripts": {
