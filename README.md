@@ -72,22 +72,62 @@ section("Details", { notes: prose() }, 3); // ### Details
 
 Captures free-form paragraph text within the current section.
 
+### `heading(depth?)` / `title()`
+
+Captures a heading's text at the given depth. `title()` is a shorthand for `heading(1)` and is the idiomatic way to capture a document's primary `#` heading.
+
+```ts
+title();       // # My Document
+heading(2);    // ## Sub-heading
+```
+
 ### `codeBlock(lang?)`
 
-Captures a fenced code block, optionally filtered by language.
+Captures the first fenced code block, optionally filtered by language.
 
 ````ts
 codeBlock("typescript"); // matches ```typescript blocks
 codeBlock(); // matches any code block
 ````
 
-### `list(itemSchema)`
+### `codeBlocks(lang?)`
 
-Captures an unordered list. Each item is validated against `itemSchema`.
+Captures **all** fenced code blocks in the section as a `string[]`, optionally filtered by language. Useful for sections containing multiple examples.
+
+````ts
+codeBlocks("ts"); // ["const a = 1;", "const b = 2;"]
+codeBlocks();     // all code blocks regardless of language
+````
+
+### `image()`
+
+Captures a markdown image (`![alt](url "title")`) as `{ alt, url, title? }`. The `ImageValue` type is exported for use in annotations.
+
+```ts
+diagram: image();
+// ![Architecture](arch.png "Figure 1") → { alt: "Architecture", url: "arch.png", title: "Figure 1" }
+```
+
+### `blockquote()`
+
+Captures the first `> …` blockquote in the section as a markdown string.
+
+### `list(itemSchema, options?)`
+
+Captures a list. Each item is validated against `itemSchema`. Pass `{ ordered: true }` to match only numbered lists, or `{ ordered: false }` to match only bullet lists.
 
 ```ts
 list(z.string());
+list(z.string(), { ordered: true });  // only matches 1. 2. 3. lists
 list(z.object({ name: z.string(), qty: z.number() }));
+```
+
+### `orderedList(itemSchema)`
+
+Shorthand for `list(itemSchema, { ordered: true })`.
+
+```ts
+orderedList(z.string()); // 1. First step\n2. Second step
 ```
 
 ### `table(rowSchema)`
@@ -98,13 +138,26 @@ Captures a GFM table. Each row is validated against `rowSchema` using column hea
 table(z.object({ nutrient: z.string(), amount: z.string() }));
 ```
 
-### `repeat(heading, fields, depth?)`
+### `repeat(heading, fields, depth?, options?)`
 
 Collects every occurrence of a heading as an array of objects. Useful for repeating sections like changelog entries or sprint reports.
 
 ```ts
 repeat("Sprint", { goal: prose(), tasks: list(z.string()) });
 // ## Sprint … ## Sprint … → [{ goal, tasks }, { goal, tasks }]
+```
+
+Options:
+
+- `nameField` — stores each section's heading text as a field on the item (required when `heading` is a `RegExp`)
+- `minItems` — minimum occurrences required (default `1`); set to `0` for zero-or-more
+
+```ts
+// Named dynamic headings
+repeat(/^Step \d+/, { body: prose() }, 2, { nameField: "title" });
+
+// Zero-or-more optional sections
+repeat("Note", { body: prose() }, 2, { minItems: 0 });
 ```
 
 ### `optional(node)`
@@ -129,6 +182,16 @@ Tries each node in order and returns the first that succeeds.
 
 ```ts
 compose(codeBlock("typescript"), codeBlock("ts"), codeBlock());
+```
+
+> **Note:** `compose()` always serializes using the first node in the list regardless of which branch matched during parsing. This is fine when all branches produce the same markdown structure (e.g. different language tags for the same code block), but may produce unexpected output when branches differ structurally.
+
+### `rule(name, node)`
+
+Attaches a display name to any node for clearer diagnostics and LLM guidance.
+
+```ts
+rule("hero image", image());
 ```
 
 ## Parsing

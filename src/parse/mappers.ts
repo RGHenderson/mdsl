@@ -190,8 +190,16 @@ export function extractRepeatSections(
   });
 }
 
+function isImageOnlyParagraph(node: Node): boolean {
+  if (node.type !== "paragraph") return false;
+  const children = (node as Paragraph).children;
+  return children.length === 1 && children[0]?.type === "image";
+}
+
 export function extractProse(ast: Root, jsonPath: string, diags: Diagnostic[]): string {
-  const paras = (ast.children as Node[]).filter((n) => n.type === "paragraph");
+  const paras = (ast.children as Node[]).filter(
+    (n) => n.type === "paragraph" && !isImageOnlyParagraph(n),
+  );
   if (paras.length === 0) {
     diags.push({
       severity: "error",

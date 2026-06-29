@@ -50,3 +50,4 @@ const result = registry.parse(markdown); // or registry.detect(markdown)
 - [`examples/spec-doc.ts`](../examples/spec-doc.ts) — frontmatter, title, sections, table
 - [`examples/runbook.ts`](../examples/runbook.ts) — repeated steps with named headings
 - [`examples/incident-postmortem.ts`](../examples/incident-postmortem.ts) — complex nested structure
+- [`examples/tutorial.ts`](../examples/tutorial.ts) — title, image, orderedList, codeBlocks, minItems

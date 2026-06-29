@@ -19,15 +19,16 @@ meta: frontmatter(
 ),
 ```
 
-## `heading(depth?)`
+## `heading(depth?)` / `title()`
 
-Extracts the first heading at the given depth (default `1`). Serializes as `# Title`.
+Extracts a heading's text at the given depth (default `1`). `title()` is a named shorthand for `heading(1)` — use it when capturing a document's primary `#` heading.
 
 ```typescript
-title: heading(1),
+name: title(),    // # My Document → "My Document"
+sub: heading(2),  // ## Sub-heading → "Sub-heading"
 ```
 
-## `section(heading, fields, depth?)`
+## `section(heading, fields, depth?, options?)`
 
 Maps a heading and its nested content. Default depth is `2` (`##`). The `fields` object holds child nodes:
 
@@ -37,6 +38,13 @@ overview: section("Overview", {
   body: prose(),
   snippet: codeBlock("bash"),
 }, 2),
+```
+
+When the heading is a `RegExp`, you **must** provide `nameField` to capture the heading text — otherwise serialization will throw:
+
+```typescript
+step: section(/^Step \d+/, { body: prose() }, 2, { nameField: "title" }),
+// "## Step 1\n\nContent." → { title: "Step 1", body: "Content." }
 ```
 
 ## `prose()`
@@ -49,20 +57,62 @@ section("Summary", { body: prose() });
 
 ## `codeBlock(lang?)`
 
-Fenced code block, optionally filtered by language:
+The **first** fenced code block, optionally filtered by language:
 
 ```typescript
 snippet: codeBlock("typescript"),
-tip: codeBlock(), // any language
+tip:     codeBlock(), // any language
 ```
 
-## `list(itemSchema)`
+## `codeBlocks(lang?)`
 
-Unordered list; each item validated against `itemSchema`:
+**All** fenced code blocks in the section as a `string[]`, optionally filtered by language. Use this when a section contains multiple examples or steps expressed as code.
 
 ```typescript
-items: list(z.string()),
-tags: list(z.object({ name: z.string(), value: z.number() })),
+examples: codeBlocks("ts"),
+// ```ts\nconst a = 1;\n``` and ```ts\nconst b = 2;\n```
+// → ["const a = 1;", "const b = 2;"]
+
+all: codeBlocks(), // every code block regardless of language
+```
+
+## `image()`
+
+Captures a markdown image (`![alt](url "title")`) as `{ alt: string, url: string, title?: string }`. The exported `ImageValue` type matches this shape.
+
+```typescript
+diagram: image(),
+// ![Architecture](arch.png "Figure 1")
+// → { alt: "Architecture", url: "arch.png", title: "Figure 1" }
+```
+
+## `blockquote()`
+
+Captures the first `> …` blockquote in the section as a markdown string.
+
+```typescript
+callout: blockquote(),
+// > Important: restart the service.
+```
+
+## `list(itemSchema, options?)`
+
+A list; each item validated against `itemSchema`. By default matches both ordered and unordered lists. Pass `{ ordered: true }` to match only numbered lists, or `{ ordered: false }` to match only bullet lists.
+
+```typescript
+items:  list(z.string()),                        // - item or 1. item
+steps:  list(z.string(), { ordered: true }),     // 1. step only
+bullets: list(z.string(), { ordered: false }),   // - bullet only
+tags:   list(z.object({ name: z.string(), value: z.number() })),
+```
+
+## `orderedList(itemSchema)`
+
+Shorthand for `list(itemSchema, { ordered: true })`. Items serialize as `1.` `2.` `3.` markers.
+
+```typescript
+steps: orderedList(z.string()),
+// 1. First\n2. Second → ["First", "Second"]
 ```
 
 ## `listItems()`
@@ -100,19 +150,24 @@ sprints: repeat("Sprint", {
 }, 2),
 ```
 
-Use a `RegExp` (e.g. `/.+/`) when each item has a **different** heading text. Pass `{ nameField: "name" }` to capture the heading text on each item:
+Use a `RegExp` when each item has a **different** heading text. Pass `{ nameField: "name" }` to capture the heading text on each item (required for serialization when using a regex heading):
 
 ```typescript
-steps: section("Steps", {
-  items: repeat(
-    /.+/,
-    {
-      command: section("Command", { body: prose() }, 4),
-    },
-    3,
-    { nameField: "name" },
-  ),
-}),
+steps: repeat(
+  /^Step \d+/,
+  { body: prose() },
+  2,
+  { nameField: "title" },
+),
+// ## Step 1 … ## Step 2 → [{ title: "Step 1", body: "…" }, { title: "Step 2", body: "…" }]
+```
+
+### `minItems`
+
+By default `repeat()` requires at least one occurrence. Set `minItems: 0` for zero-or-more semantics (returns `[]` instead of an error when no matching headings are found):
+
+```typescript
+notes: repeat("Note", { body: prose() }, 2, { minItems: 0 }),
 ```
 
 ## `optional(node)`
@@ -137,4 +192,14 @@ Tries nodes in order; first match wins:
 
 ```typescript
 snippet: compose(codeBlock("typescript"), codeBlock()),
+```
+
+> **Serialization note:** `compose()` always serializes using the **first** node in the list regardless of which branch matched during parsing. This is fine when all branches produce the same markdown structure (e.g. different language aliases for the same code block). If the branches differ structurally (e.g. `compose(prose(), codeBlock())`), the serialized output may not match the original source, though a subsequent parse will still succeed.
+
+## `rule(name, node)`
+
+Attaches a display name to any node for clearer diagnostics and LLM guidance output:
+
+```typescript
+hero: rule("hero image", image()),
 ```

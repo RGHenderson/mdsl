@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { IncidentPostmortem } from "../examples/incident-postmortem.js";
 import { Runbook } from "../examples/runbook.js";
 import { SpecDoc } from "../examples/spec-doc.js";
+import { TutorialDoc } from "../examples/tutorial.js";
 import type { MdslDocument, ParseResult } from "../src/index.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -25,6 +26,7 @@ const cases: Array<{ name: string; doc: MdslDocument<unknown>; fixture: string }
   { name: "spec-doc", doc: SpecDoc, fixture: "spec-doc" },
   { name: "runbook", doc: Runbook, fixture: "runbook" },
   { name: "incident-postmortem", doc: IncidentPostmortem, fixture: "incident-postmortem" },
+  { name: "tutorial", doc: TutorialDoc, fixture: "tutorial" },
 ];
 
 describe("round-trip", () => {
