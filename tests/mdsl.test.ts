@@ -965,6 +965,34 @@ describe("blockquote() serialization", () => {
   });
 });
 
+// ── regex heading serialization guard ────────────────────────────────────────
+
+describe("regex heading serialization", () => {
+  it("throws when serializing a section with regex heading and no nameField", () => {
+    const Doc = document({ step: section(/^Step/, { body: prose() }) });
+    const { data } = Doc.parse("## Step 1\n\nContent.\n");
+    expect(data).not.toBeNull();
+    expect(() => Doc.serialize(data!)).toThrow(/nameField/);
+  });
+
+  it("serializes a section correctly when nameField is provided", () => {
+    const Doc = document({
+      step: section(/^Step/, { body: prose() }, 2, { nameField: "stepName" }),
+    });
+    const { data } = Doc.parse("## Step 1\n\nContent.\n");
+    expect(data!.step.stepName).toBe("Step 1");
+    const out = Doc.serialize(data!);
+    expect(out).toContain("## Step 1");
+  });
+
+  it("throws when serializing a repeat with regex heading and no nameField", () => {
+    const Doc = document({ steps: repeat(/^Step/, { body: prose() }) });
+    const { data } = Doc.parse("## Step 1\n\nA.\n\n## Step 2\n\nB.\n");
+    expect(data).not.toBeNull();
+    expect(() => Doc.serialize(data!)).toThrow(/nameField/);
+  });
+});
+
 // ── repeat() field type inference ─────────────────────────────────────────────
 
 describe("repeat() field type inference", () => {

@@ -18,12 +18,16 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
     case "section": {
       if (value == null || typeof value !== "object") return "";
       const obj = value as Record<string, unknown>;
+      if (typeof meta.heading !== "string" && !meta.nameField) {
+        throw new Error(
+          `Cannot serialize section with regex heading "${meta.heading}" without a nameField. ` +
+            `Provide nameField in the section() options to capture the heading text.`,
+        );
+      }
       const headingText =
         meta.nameField && typeof obj[meta.nameField] === "string"
           ? String(obj[meta.nameField])
-          : typeof meta.heading === "string"
-            ? meta.heading
-            : String(meta.heading).replace(/^\/|\/[gimsuy]*$/g, "");
+          : (meta.heading as string);
       const hashes = "#".repeat(meta.depth);
       const parts: string[] = [`${hashes} ${headingText}`];
       for (const [key, fieldNode] of Object.entries(meta.fields)) {
@@ -72,10 +76,14 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
     case "repeat": {
       const items = Array.isArray(value) ? value : [];
       const hashes = "#".repeat(meta.depth);
+      if (typeof meta.heading !== "string" && !meta.nameField) {
+        throw new Error(
+          `Cannot serialize repeat with regex heading "${meta.heading}" without a nameField. ` +
+            `Provide nameField in the repeat() options to capture the heading text.`,
+        );
+      }
       const defaultLabel =
-        typeof meta.heading === "string"
-          ? meta.heading
-          : String(meta.heading).replace(/^\/|\/[gimsuy]*$/g, "");
+        typeof meta.heading === "string" ? meta.heading : (meta.nameField as string);
       return items
         .map((item) => {
           if (item == null || typeof item !== "object") return "";
