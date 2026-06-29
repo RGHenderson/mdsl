@@ -162,6 +162,10 @@ export function listItems(): MdslNode<ZodArray<ZodString>> {
   return list(z.string());
 }
 
+export function title(): MdslNode<ZodString> {
+  return heading(1);
+}
+
 export type RepeatOptions = {
   /** When set, the repeat heading text is stored on each item under this field name */
   nameField?: string;

@@ -14,6 +14,8 @@ import {
   repeat,
   orderedList,
   codeBlocks,
+  heading,
+  title,
   image,
   rule,
   createRegistry,
@@ -993,6 +995,24 @@ describe("regex heading serialization", () => {
     const { data } = Doc.parse("## Step 1\n\nA.\n\n## Step 2\n\nB.\n");
     expect(data).not.toBeNull();
     expect(() => Doc.serialize(data!)).toThrow(/nameField/);
+  });
+});
+
+// ── title() ───────────────────────────────────────────────────────────────────
+
+describe("title()", () => {
+  const Doc = document({ name: title() });
+
+  it("extracts the H1 heading text", () => {
+    const result = Doc.parse("# My Document\n\nSome content.\n");
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.name).toBe("My Document");
+  });
+
+  it("is equivalent to heading(1)", () => {
+    const DocHeading = document({ name: heading(1) });
+    const md = "# Hello\n\nContent.\n";
+    expect(Doc.parse(md).data!.name).toBe(DocHeading.parse(md).data!.name);
   });
 });
 

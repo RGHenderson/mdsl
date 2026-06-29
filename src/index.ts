@@ -2,6 +2,7 @@ export {
   document,
   frontmatter,
   heading,
+  title,
   section,
   prose,
   codeBlock,
