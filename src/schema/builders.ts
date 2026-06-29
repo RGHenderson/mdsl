@@ -14,7 +14,6 @@ import {
   type MdslNode,
   type MdslKind,
   type ParseOptions,
-  type InferMdsl,
   type ValidatorFn,
 } from "./types.js";
 import { parseMarkdown, validateData } from "../parse/parser.js";
@@ -269,5 +268,4 @@ export function document<Fields extends Record<string, MdslNode>>(
 
 // ── Type helpers ──────────────────────────────────────────────────────────────
 
-export type { InferMdsl as infer };
 export { formatDiagnostics };

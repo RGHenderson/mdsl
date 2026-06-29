@@ -19,7 +19,7 @@ export {
   formatDiagnostics,
 } from "./schema/builders.js";
 
-export type { infer, RepeatOptions, ImageValue } from "./schema/builders.js";
+export type { RepeatOptions, ImageValue } from "./schema/builders.js";
 
 export { createRegistry } from "./schema/registry.js";
 

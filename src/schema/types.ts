@@ -130,10 +130,8 @@ export class MdslError extends Error {
   }
 }
 
-export type InferMdsl<D extends MdslDocument<unknown>> =
+export type InferDocument<D extends MdslDocument<unknown>> =
   D extends MdslDocument<infer T> ? T : never;
-
-export type InferDocument<D extends MdslDocument<unknown>> = InferMdsl<D>;
 
 export type MdslPoint = Point;
 export type MdslPosition = Position;
