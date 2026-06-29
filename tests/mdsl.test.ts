@@ -941,3 +941,33 @@ describe("Zod transforms", () => {
     });
   });
 });
+
+// ── repeat() field type inference ─────────────────────────────────────────────
+
+describe("repeat() field type inference", () => {
+  it("infers typed fields on repeat items", () => {
+    const Doc = document({
+      steps: repeat("Step", { body: prose(), code: optional(codeBlock()) }),
+    });
+    const md = "## Step\n\nDo this.\n\n## Step\n\nDo that.\n\n```\nhello\n```\n";
+    const result = Doc.parse(md);
+    expect(result.diagnostics).toHaveLength(0);
+    const first = result.data!.steps[0]!;
+    // TypeScript infers steps as Array<{ body: string; code: string | undefined }>
+    expect(typeof first.body).toBe("string");
+    expect(first.code).toBeUndefined();
+    const second = result.data!.steps[1]!;
+    expect(second.code).toBe("hello");
+  });
+
+  it("infers nameField as a string property on each item", () => {
+    const Doc = document({
+      items: repeat(/^Item/, { body: prose() }, 2, { nameField: "title" }),
+    });
+    const md = "## Item One\n\nContent.\n\n## Item Two\n\nMore.\n";
+    const result = Doc.parse(md);
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.items[0]!.title).toBe("Item One");
+    expect(result.data!.items[1]!.title).toBe("Item Two");
+  });
+});

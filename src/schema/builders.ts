@@ -141,12 +141,15 @@ export type RepeatOptions = {
 };
 
 /** Extract a repeated heading as an array of objects */
-export function repeat<F extends Record<string, MdslNode>>(
+export function repeat<
+  F extends Record<string, MdslNode>,
+  N extends string | undefined = undefined,
+>(
   sectionHeading: string | RegExp,
   fields: F,
   depth = 2,
-  options?: RepeatOptions,
-): MdslNode<ZodArray<ZodObject<ZodRawShape>>> {
+  options?: { nameField?: N },
+): MdslNode<ZodArray<ZodObject<WithNameField<F, N>>>> {
   const nameField = options?.nameField;
   const shape: Record<string, ZodType> = Object.fromEntries(
     Object.entries(fields).map(([k, v]) => [k, v.schema]),
@@ -154,7 +157,7 @@ export function repeat<F extends Record<string, MdslNode>>(
   if (nameField) {
     shape[nameField] = z.string();
   }
-  const itemSchema = z.object(shape) as ZodObject<FieldsToShape<F>>;
+  const itemSchema = z.object(shape as ZodRawShape) as ZodObject<WithNameField<F, N>>;
   const kind: MdslKind = nameField
     ? { kind: "repeat", heading: sectionHeading, depth, fields, nameField }
     : { kind: "repeat", heading: sectionHeading, depth, fields };
