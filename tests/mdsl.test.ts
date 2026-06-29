@@ -12,6 +12,7 @@ import {
   defaultValue,
   compose,
   repeat,
+  orderedList,
   rule,
   createRegistry,
   formatDiagnostics,
@@ -990,6 +991,49 @@ describe("regex heading serialization", () => {
     const { data } = Doc.parse("## Step 1\n\nA.\n\n## Step 2\n\nB.\n");
     expect(data).not.toBeNull();
     expect(() => Doc.serialize(data!)).toThrow(/nameField/);
+  });
+});
+
+// ── orderedList() ─────────────────────────────────────────────────────────────
+
+describe("orderedList()", () => {
+  const Doc = document({
+    steps: section("Steps", { items: orderedList(z.string()) }),
+  });
+
+  it("parses a numbered list", () => {
+    const result = Doc.parse("## Steps\n\n1. First\n2. Second\n3. Third\n");
+    expect(result.diagnostics).toHaveLength(0);
+    expect(result.data!.steps.items).toEqual(["First", "Second", "Third"]);
+  });
+
+  it("does not match an unordered list", () => {
+    const result = Doc.parse("## Steps\n\n- First\n- Second\n");
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_LIST)).toBe(true);
+  });
+
+  it("serializes with numbered markers", () => {
+    const out = Doc.serialize({ steps: { items: ["Alpha", "Beta"] } });
+    expect(out).toContain("1. Alpha");
+    expect(out).toContain("2. Beta");
+    expect(out).not.toContain("- Alpha");
+  });
+
+  it("round-trips through parse → serialize → parse", () => {
+    const md = "## Steps\n\n1. First\n2. Second\n";
+    const first = Doc.parse(md);
+    const second = Doc.parse(Doc.serialize(first.data!));
+    expect(second.data!.steps.items).toEqual(first.data!.steps.items);
+  });
+});
+
+describe("list() with ordered: false", () => {
+  it("does not match a numbered list", () => {
+    const Doc = document({
+      items: section("Items", { list: list(z.string(), { ordered: false }) }),
+    });
+    const result = Doc.parse("## Items\n\n1. One\n2. Two\n");
+    expect(result.diagnostics.some((d) => d.code === DiagnosticCodes.MISSING_LIST)).toBe(true);
   });
 });
 

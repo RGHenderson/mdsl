@@ -50,11 +50,10 @@ function serializeNode(value: unknown, node: MdslNode, depth: number): string {
       const items = Array.isArray(value) ? value : [];
       if (items.length === 0) return "";
       return items
-        .map((item) => {
-          if (typeof item === "object" && item !== null) {
-            return `- ${JSON.stringify(item)}`;
-          }
-          return `- ${String(item)}`;
+        .map((item, i) => {
+          const content =
+            typeof item === "object" && item !== null ? JSON.stringify(item) : String(item);
+          return meta.ordered ? `${i + 1}. ${content}` : `- ${content}`;
         })
         .join("\n");
     }

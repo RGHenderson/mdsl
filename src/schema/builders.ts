@@ -92,8 +92,19 @@ export function blockquote(): MdslNode<ZodString> {
   return makeNode({ kind: "blockquote" }, z.string());
 }
 
-export function list<T extends ZodType>(itemSchema: T): MdslNode<ZodArray<T>> {
-  return makeNode({ kind: "list", itemSchema }, z.array(itemSchema));
+export function list<T extends ZodType>(
+  itemSchema: T,
+  options?: { ordered?: boolean },
+): MdslNode<ZodArray<T>> {
+  const meta =
+    options?.ordered !== undefined
+      ? { kind: "list" as const, itemSchema, ordered: options.ordered }
+      : { kind: "list" as const, itemSchema };
+  return makeNode(meta, z.array(itemSchema));
+}
+
+export function orderedList<T extends ZodType>(itemSchema: T): MdslNode<ZodArray<T>> {
+  return list(itemSchema, { ordered: true });
 }
 
 export function table<T extends ZodType>(rowSchema: T): MdslNode<ZodArray<T>> {

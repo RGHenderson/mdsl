@@ -104,7 +104,8 @@ function describeNode(key: string, node: MdslNode, depth: number): string {
 
     case "list": {
       const desc = meta.itemSchema.description;
-      return `${pad}- **${key}**: Unordered list.${desc ? ` Items: ${desc}` : ""}`;
+      const listType = meta.ordered ? "Ordered (numbered)" : "Unordered";
+      return `${pad}- **${key}**: ${listType} list.${desc ? ` Items: ${desc}` : ""}`;
     }
 
     case "table": {
@@ -181,7 +182,7 @@ function exampleNode(node: MdslNode): string {
     case "list": {
       const item = generateExampleData(meta.itemSchema);
       const itemStr = typeof item === "string" ? item : JSON.stringify(item);
-      return `- ${itemStr}\n- Second item`;
+      return meta.ordered ? `1. ${itemStr}\n2. Second item` : `- ${itemStr}\n- Second item`;
     }
 
     case "table": {
@@ -256,7 +257,7 @@ function templateNode(node: MdslNode): string {
       return `\`\`\`${meta.lang ?? ""}\n<code>\n\`\`\``;
 
     case "list":
-      return "- <item>";
+      return meta.ordered ? "1. <item>" : "- <item>";
 
     case "table": {
       const shape = (meta.rowSchema as z.ZodObject<ZodRawShape>).shape ?? {};

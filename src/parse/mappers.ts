@@ -257,9 +257,11 @@ export function extractList(
   itemSchema: ZodType,
   jsonPath: string,
   diags: Diagnostic[],
+  ordered?: boolean,
 ): unknown[] {
   for (const node of ast.children) {
     if (node.type === "list") {
+      if (ordered !== undefined && node.ordered !== ordered) continue;
       return node.children.map((item, idx) => {
         const text = mdastToString(item).trim();
         const itemPath = `${jsonPath}[${idx}]`;
@@ -412,7 +414,7 @@ export function extractNode(
       return extractCodeBlock(ownContentRoot(ast), meta.lang, jsonPath, diags);
 
     case "list":
-      return extractList(ownContentRoot(ast), meta.itemSchema, jsonPath, diags);
+      return extractList(ownContentRoot(ast), meta.itemSchema, jsonPath, diags, meta.ordered);
 
     case "table":
       return extractTable(ownContentRoot(ast), meta.rowSchema, jsonPath, diags);

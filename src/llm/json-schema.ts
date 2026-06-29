@@ -76,7 +76,7 @@ export function collectMappingHints(
         hints[path] = `Code block${meta.lang ? ` (language: ${meta.lang})` : ""}`;
         break;
       case "list":
-        hints[path] = "Unordered list items";
+        hints[path] = meta.ordered ? "Ordered (numbered) list items" : "Unordered list items";
         break;
       case "table":
         hints[path] = "GFM table rows";
